@@ -1,9 +1,20 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
       <main className="max-w-4xl w-full">
+        <div className="flex justify-center mb-8">
+          <Image
+            src="/juliette.jpg"
+            alt="Juliette"
+            width={200}
+            height={200}
+            className="rounded-lg object-cover"
+            priority
+          />
+        </div>
         <h1 className="text-4xl font-bold mb-4">
           Welcome to Juliette
         </h1>
