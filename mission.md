@@ -1,0 +1,1 @@
+I am trying to build an AI agent that (1) ingests educational video, (2) answers student questions with manim-style animations, personalized practice, or simple explanations, and (3) integrates with Zoom for live Q&A + teacher feedback (including pulling from other internet videos). This is the tech stack that I want to implement
