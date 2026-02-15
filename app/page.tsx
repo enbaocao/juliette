@@ -25,15 +25,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFC] flex flex-col lg:flex-row text-[#1a1a1a]">
+    <div className="min-h-[calc(100dvh-72px)] bg-[#FAFAFC] flex flex-col lg:flex-row text-[#1a1a1a]">
       {/* Left Column: Content */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 md:p-16 lg:p-24">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 md:p-14 lg:p-20">
         <div className="max-w-lg w-full">
-          <h1 className="text-5xl md:text-6xl mb-12 text-center text-[#1a1a1a] font-['Souvenir',sans-serif] font-normal tracking-tight">
+          <h1 className="text-5xl md:text-[3.4rem] mb-10 text-center text-[#1a1a1a] font-['Souvenir',sans-serif] font-normal tracking-tight">
             Welcome, Romeo
           </h1>
 
-          <div className="bg-[#FAFAFC] p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+          <div className="bg-[#FAFAFC] p-7 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
             <Suspense fallback={<div className="py-4 text-center text-gray-500">Loading…</div>}>
               <AuthForm />
             </Suspense>
@@ -47,8 +47,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
       </div>
 
       {/* Right Column: Image */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-8 md:p-12 lg:p-16">
-        <div className="relative w-full max-w-lg aspect-[4/3] md:aspect-square rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100">
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-10">
+        <div className="relative w-full max-w-lg aspect-[4/3] rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100">
           <Image
             src="/hero-image.png"
             alt="Students studying late at night"
