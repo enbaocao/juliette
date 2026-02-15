@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function TestAnimationPage() {
   const [context, setContext] = useState('');
@@ -11,12 +11,13 @@ export default function TestAnimationPage() {
   const [manimStatus, setManimStatus] = useState<any>(null);
 
   // Check Manim installation on mount
-  useState(() => {
+  // Check Manim installation on mount
+  useEffect(() => {
     fetch('/api/generate-animation')
       .then((res) => res.json())
       .then(setManimStatus)
       .catch(console.error);
-  });
+  }, []);
 
   const exampleContexts = [
     {
@@ -110,11 +111,10 @@ export default function TestAnimationPage() {
         {/* Manim Status */}
         {manimStatus && (
           <div
-            className={`mb-6 p-4 rounded-lg border ${
-              manimStatus.ready
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
-            }`}
+            className={`mb-6 p-4 rounded-lg border ${manimStatus.ready
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+              }`}
           >
             <div className="flex items-center gap-2">
               {manimStatus.ready ? (
