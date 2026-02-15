@@ -79,46 +79,56 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
         </div>
       </div>
 
-      {/* Interest Tags (only for practice mode) */}
-      {mode === 'practice' && (
+      {mode === 'practice' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="practice-topic" className="block text-sm font-medium mb-2">
+              Topics
+            </label>
+            <input
+              type="text"
+              id="practice-topic"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="e.g., Chain rule, derivatives, limits"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800"
+              disabled={loading}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="interests" className="block text-sm font-medium mb-2">
+              Interests
+            </label>
+            <input
+              type="text"
+              id="interests"
+              value={interests}
+              onChange={(e) => setInterests(e.target.value)}
+              placeholder="e.g., sports, music, gaming"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800"
+              disabled={loading}
+            />
+          </div>
+        </div>
+      ) : (
         <div>
-          <label htmlFor="interests" className="block text-sm font-medium mb-2">
-            Your Interests (optional)
-            <span className="text-xs text-gray-500 ml-2">
-              e.g., &quot;sports, music, cooking&quot;
-            </span>
+          <label htmlFor="question" className="block text-sm font-medium mb-2">
+            Your Question
           </label>
-          <input
-            type="text"
-            id="interests"
-            value={interests}
-            onChange={(e) => setInterests(e.target.value)}
-            placeholder="Enter topics you're interested in, separated by commas"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800"
+          <textarea
+            id="question"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="What would you like to know about this video?"
+            rows={4}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800 resize-none"
             disabled={loading}
+            required
           />
-          <p className="text-xs text-gray-500 mt-1">
-            We&apos;ll use these to create more relatable practice problems
-          </p>
         </div>
       )}
-
-      {/* Question Input */}
-      <div>
-        <label htmlFor="question" className="block text-sm font-medium mb-2">
-          Your Question
-        </label>
-        <textarea
-          id="question"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="What would you like to know about this video?"
-          rows={4}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800 resize-none"
-          disabled={loading}
-          required
-        />
-      </div>
 
       {/* Submit Button */}
       <button
@@ -126,7 +136,7 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
         disabled={!question.trim() || loading}
         className="w-full py-3 px-4 bg-[#ffc8dd] hover:bg-[#ffbcd5] disabled:bg-gray-400 disabled:cursor-not-allowed text-[#1a1a1a] font-medium rounded-lg transition-colors"
       >
-        {loading ? 'Getting Answer...' : 'Ask Question'}
+        {loading ? 'Getting Answer...' : mode === 'practice' ? 'Generate Practice Problem' : 'Ask Question'}
       </button>
     </form>
   );

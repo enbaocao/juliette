@@ -17,23 +17,27 @@ export default function AuthForm({ disabled = false }: AuthFormProps) {
   const next = searchParams.get('next') ?? '/upload';
   const supabase = createClient();
 
-  const getBaseUrl = () => {
-    const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-    if (configured) {
-      return configured.replace(/\/+$/, '');
-    }
-    return window.location.origin;
-  };
-
   const getSafeNextPath = () => {
     if (!next.startsWith('/')) return '/upload';
     return next;
   };
 
   const getRedirectUrl = () => {
-    const url = new URL('/auth/callback', getBaseUrl());
+    const url = new URL('/auth/callback', window.location.origin);
     url.searchParams.set('next', getSafeNextPath());
     return url.toString();
+  };
+
+  const getDirectGoogleAuthUrl = () => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
+    }
+
+    const authUrl = new URL('/auth/v1/authorize', supabaseUrl);
+    authUrl.searchParams.set('provider', 'google');
+    authUrl.searchParams.set('redirect_to', getRedirectUrl());
+    return authUrl.toString();
   };
 
   const handleGoogleSignIn = async () => {
@@ -43,14 +47,35 @@ export default function AuthForm({ disabled = false }: AuthFormProps) {
     // Yield to browser so loading state renders before network call
     await new Promise((r) => setTimeout(r, 0));
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const authPromise = supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: getRedirectUrl() },
+        options: {
+          redirectTo: getRedirectUrl(),
+          skipBrowserRedirect: true,
+        },
       });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Google sign-in timed out')), 8000);
+      });
+
+      const { data, error } = await Promise.race([authPromise, timeoutPromise]);
+
       if (error) throw error;
+
+      if (data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
+
+      window.location.assign(getDirectGoogleAuthUrl());
     } catch (err: unknown) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Sign in failed' });
-      setLoading(false);
+      try {
+        window.location.assign(getDirectGoogleAuthUrl());
+      } catch {
+        setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Sign in failed' });
+        setLoading(false);
+      }
     }
   };
 
