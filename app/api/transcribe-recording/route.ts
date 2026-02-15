@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
-import { createClient } from "@/lib/supabase/server";
 
 // Configure route
 export const runtime = "nodejs";
@@ -62,20 +61,11 @@ export async function POST(request: NextRequest) {
   try {
     console.log("📝 Starting direct transcription...");
 
-    // Get user
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    // This endpoint is intentionally usable without auth (e.g., Zoom Apps context).
-    // We still need a user_id for the `videos` row, so we:
-    // 1) use the authenticated user id when present
-    // 2) otherwise fall back to DEMO_USER_ID
-    // 3) otherwise use a fixed "public" UUID (you'll create this user in Supabase once)
+    // Use server-side service role user for demo (no client auth)
+    // Prefer PUBLIC_USER_ID (recommended) then DEMO_USER_ID.
     const envDemoId = process.env.DEMO_USER_ID;
     const publicUserId = process.env.PUBLIC_USER_ID;
-    const candidateId = user?.id ?? envDemoId ?? publicUserId ?? null;
+    const candidateId = publicUserId ?? envDemoId ?? null;
 
     if (!candidateId) {
       return NextResponse.json(
@@ -157,8 +147,17 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await (file as File).arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const openaiForm = new FormData();
-    const fileBlob = new Blob([buffer]);
-    openaiForm.append("file", fileBlob as any, (file as any).name || "upload");
+    // Preserve MIME type and filename (OpenAI needs correct type/extension to decode)
+    const contentType = (file as any).type || "application/octet-stream";
+    const filename =
+      (file as any).name || `upload.${contentType.split("/")[1] || "bin"}`;
+    const fileBlob = new Blob([buffer], { type: contentType });
+    console.log("Uploading file to OpenAI:", {
+      filename,
+      contentType,
+      size: buffer.length,
+    });
+    openaiForm.append("file", fileBlob as any, filename);
     openaiForm.append("model", "whisper-1");
     openaiForm.append("response_format", "verbose_json");
     openaiForm.append("timestamp_granularities[]", "segment");
@@ -191,7 +190,10 @@ export async function POST(request: NextRequest) {
     // Build full transcript text
     const fullText = (transcription as any).text
       ? String((transcription as any).text)
-      : segments.map((s: any) => String(s?.text || '')).join(' ').trim();
+      : segments
+          .map((s: any) => String(s?.text || ""))
+          .join(" ")
+          .trim();
 
     // Chunk the transcript
     const chunks = chunkTranscript(segments, 60);
@@ -223,9 +225,9 @@ export async function POST(request: NextRequest) {
     // This is best-effort: it won't fail the request if your schema doesn't have this column.
     try {
       await supabaseAdmin
-        .from('videos')
+        .from("videos")
         .update({ transcript: fullText } as any)
-        .eq('id', video.id);
+        .eq("id", video.id);
     } catch {
       // ignore
     }
