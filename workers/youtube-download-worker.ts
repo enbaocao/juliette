@@ -78,11 +78,12 @@ async function downloadYouTubeVideo(
     }
 
     // Download the video
-    // Format: best video+audio in mp4, fallback to best single file
+    // Format: 480p or lower to keep file size manageable for Supabase Storage
+    // This ensures videos stay under typical storage limits (~50MB)
     const { stderr } = await execFileAsync(
       'yt-dlp',
       [
-        '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        '-f', 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]/best[height<=360]',
         '--merge-output-format', 'mp4',
         '-o', outputPath,
         '--no-warnings',
