@@ -1,12 +1,7 @@
 import OpenAI from 'openai';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
 
-// Load .env.local if not already loaded (for worker scripts)
-if (!process.env.OPENAI_API_KEY) {
-  dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
-}
-
+// Next.js automatically loads environment variables from .env.local
+// For standalone worker scripts, load dotenv at the top of the worker file instead
 export const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
