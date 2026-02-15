@@ -66,11 +66,6 @@ class GeneratedScene(Scene):
    - Ensure mathematical accuracy
    - Keep code clean and well-organized
 
-6.5. **PERFORMANCE OPTIMIZATION**:
-   - Keep animations efficient
-   - Avoid complex nested loops or excessive calculations
-   - Use low-res rendering techniques if necessary (e.g., fewer points in plots)
-
 7. **OUTPUT FORMAT**:
    - Return ONLY Python code
    - NO markdown code blocks (\`\`\`), NO explanations, NO comments outside the code
@@ -112,7 +107,7 @@ Return ONLY the Python code, no markdown formatting:`;
 
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001', // Haiku 4.5: 3x faster, 20x cheaper, still excellent code quality
+      model: 'claude-opus-4-6', // Opus 4.6 is optimized for code generation and reasoning
       max_tokens: 4096,
       temperature: 0.7, // Lower temperature for more consistent, focused output
       system: systemPrompt,
@@ -148,6 +143,20 @@ function cleanManimCode(code: string): string {
 
   // Remove any leading/trailing whitespace
   cleaned = cleaned.trim();
+
+  // Manim compatibility cleanup:
+  // Some Manim versions don't accept `font_size` in axis label helpers
+  // (Axes.get_x_axis_label / get_y_axis_label -> CoordinateSystem._get_axis_label)
+  // Example failing code: axes.get_x_axis_label("x", font_size=24)
+  // We strip only the `font_size=...` kwarg and keep the rest intact.
+  cleaned = cleaned.replace(
+    /(\bget_[xy]_axis_label\s*\([^\)]*?),\s*font_size\s*=\s*[\d.]+\s*(\))/g,
+    '$1$2'
+  );
+  cleaned = cleaned.replace(
+    /(\bget_[xy]_axis_label\s*\([^\)]*?)\s*font_size\s*=\s*[\d.]+\s*,\s*/g,
+    '$1'
+  );
 
   // Ensure imports are present
   if (!cleaned.includes('from manim import')) {
