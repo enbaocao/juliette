@@ -1,8 +1,14 @@
-import { createServerClient } from '@supabase/ssr';
-import type { CookieOptions } from '@supabase/ssr';
+// import { createServerClient } from '@supabase/ssr';
+// import type { CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function updateSession(request: NextRequest) {
+  // AUTH DISABLED - skip session refresh and route protection
+  return NextResponse.next({
+    request: { headers: request.headers },
+  });
+
+  /* AUTH ENABLED:
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
@@ -25,10 +31,8 @@ export async function updateSession(request: NextRequest) {
       }
     );
 
-    // Refresh session - required for Server Components
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Protect /upload and /teacher - redirect to home with next param if not authenticated
     const path = request.nextUrl.pathname;
     if ((path === '/upload' || path.startsWith('/teacher')) && !user) {
       const redirectUrl = new URL('/', request.url);
@@ -36,8 +40,9 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
   } catch {
-    // Auth/session refresh failed - allow request through, pages will handle auth
+    // Auth/session refresh failed - allow request through
   }
 
   return response;
+  */
 }

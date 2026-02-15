@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useSearchParams } from 'next/navigation';
 
-export default function AuthForm() {
+type AuthFormProps = {
+  /** When true, buttons are visible but non-functional (auth disabled) */
+  disabled?: boolean;
+};
+
+export default function AuthForm({ disabled = false }: AuthFormProps) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -19,6 +24,7 @@ export default function AuthForm() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (disabled) return;
     setLoading(true);
     setMessage(null);
     // Yield to browser so loading state renders before network call
@@ -37,6 +43,7 @@ export default function AuthForm() {
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (disabled) return;
     if (!email.trim()) return;
 
     setLoading(true);
@@ -66,8 +73,8 @@ export default function AuthForm() {
       <button
         type="button"
         onClick={handleGoogleSignIn}
-        disabled={loading}
-        className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors mb-4 group disabled:opacity-50"
+        disabled={loading || disabled}
+        className="w-full flex items-center justify-center gap-3 py-3.5 px-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors mb-4 group disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -93,14 +100,14 @@ export default function AuthForm() {
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          disabled={loading}
+          disabled={loading || disabled}
           className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all disabled:opacity-50"
           required
         />
         <button
           type="submit"
-          disabled={loading}
-          className="w-full py-3 px-4 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] transition-colors shadow-md disabled:opacity-50"
+          disabled={loading || disabled}
+          className="w-full py-3 px-4 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue with email
         </button>
