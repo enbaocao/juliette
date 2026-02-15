@@ -3,13 +3,17 @@
 import { useState, useEffect } from 'react';
 import { ZoomMeetingContext } from '@/hooks/useZoomApp';
 import { LiveSession, Question } from '@/lib/types';
+import ManimVideoTab from './ManimVideoTab';
 
 interface StudentViewProps {
   context: ZoomMeetingContext;
   session: LiveSession | null;
 }
 
+type TabType = 'questions' | 'manim' | 'personalized';
+
 export default function StudentView({ context, session }: StudentViewProps) {
+  const [activeTab, setActiveTab] = useState<TabType>('questions');
   const [question, setQuestion] = useState('');
   const [mode, setMode] = useState<'simple' | 'practice' | 'animation'>('simple');
   const [interestTags, setInterestTags] = useState('');
@@ -111,7 +115,46 @@ export default function StudentView({ context, session }: StudentViewProps) {
         )}
       </div>
 
-      {/* Question Input */}
+      {/* Tab Navigation */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab('questions')}
+            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'questions'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            💬 Q&A
+          </button>
+          <button
+            onClick={() => setActiveTab('manim')}
+            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'manim'
+                ? 'border-purple-600 text-purple-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            🎬 Animations
+          </button>
+          <button
+            onClick={() => setActiveTab('personalized')}
+            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'personalized'
+                ? 'border-green-600 text-green-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            ✨ Personalized
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'questions' && (
+        <>
+          {/* Question Input */}
       <div className="border-b border-gray-200 p-4 bg-white">
         <h3 className="font-semibold text-gray-900 mb-3">Ask a Question</h3>
 
@@ -193,72 +236,107 @@ export default function StudentView({ context, session }: StudentViewProps) {
         </button>
       </div>
 
-      {/* Recent Questions Feed */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-        <h3 className="font-semibold text-gray-900 mb-3">Your Questions</h3>
+          {/* Recent Questions Feed */}
+          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+            <h3 className="font-semibold text-gray-900 mb-3">Your Questions</h3>
 
-        {recentQuestions.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-8">
-            No questions yet. Be the first to ask!
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {recentQuestions.map((q) => (
-              <div
-                key={q.id}
-                className="bg-white border border-gray-200 rounded-lg p-3"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <p className="text-sm font-medium text-gray-900 flex-1">
-                    Q: {q.question}
-                  </p>
-                  <span
-                    className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-                      q.mode === 'simple'
-                        ? 'bg-blue-100 text-blue-800'
-                        : q.mode === 'practice'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}
+            {recentQuestions.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-8">
+                No questions yet. Be the first to ask!
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {recentQuestions.map((q) => (
+                  <div
+                    key={q.id}
+                    className="bg-white border border-gray-200 rounded-lg p-3"
                   >
-                    {q.mode}
-                  </span>
-                </div>
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="text-sm font-medium text-gray-900 flex-1">
+                        Q: {q.question}
+                      </p>
+                      <span
+                        className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
+                          q.mode === 'simple'
+                            ? 'bg-blue-100 text-blue-800'
+                            : q.mode === 'practice'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}
+                      >
+                        {q.mode}
+                      </span>
+                    </div>
 
-                {q.answer && (
-                  <div className="mt-2 pt-2 border-t border-gray-100">
-                    <p className="text-xs text-gray-600 mb-1 font-medium">
-                      AI Answer:
-                    </p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                      {q.answer.content}
-                    </p>
+                    {q.answer && (
+                      <div className="mt-2 pt-2 border-t border-gray-100">
+                        <p className="text-xs text-gray-600 mb-1 font-medium">
+                          AI Answer:
+                        </p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                          {q.answer.content}
+                        </p>
 
-                    {q.answer.references && q.answer.references.length > 0 && (
-                      <div className="mt-2 text-xs text-gray-500">
-                        <p className="font-medium">References:</p>
-                        {q.answer.references.map((ref, idx) => (
-                          <p key={idx}>
-                            • {Math.floor(ref.start_sec / 60)}:
-                            {String(Math.floor(ref.start_sec % 60)).padStart(2, '0')}
-                          </p>
-                        ))}
+                        {q.answer.references && q.answer.references.length > 0 && (
+                          <div className="mt-2 text-xs text-gray-500">
+                            <p className="font-medium">References:</p>
+                            {q.answer.references.map((ref, idx) => (
+                              <p key={idx}>
+                                • {Math.floor(ref.start_sec / 60)}:
+                                {String(Math.floor(ref.start_sec % 60)).padStart(2, '0')}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!q.answer && (
+                      <div className="mt-2 flex items-center text-xs text-gray-500">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-2"></div>
+                        Generating answer...
                       </div>
                     )}
                   </div>
-                )}
-
-                {!q.answer && (
-                  <div className="mt-2 flex items-center text-xs text-gray-500">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-2"></div>
-                    Generating answer...
-                  </div>
-                )}
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
+
+      {/* Manim Video Tab */}
+      {activeTab === 'manim' && (
+        <ManimVideoTab
+          context={context}
+          session={session}
+        />
+      )}
+
+      {/* Personalized Questions Tab (Scaffold) */}
+      {activeTab === 'personalized' && (
+        <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">✨</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Personalized Learning
+            </h3>
+            <p className="text-sm text-gray-600 mb-4 max-w-md mx-auto">
+              Get questions and practice problems tailored to your learning style and interests.
+              Based on today's discussion: "{session?.title || 'Current lecture'}"
+            </p>
+            <div className="bg-white border border-gray-200 rounded-lg p-4 max-w-md mx-auto text-left">
+              <p className="text-xs text-gray-500 mb-2">Coming Soon:</p>
+              <ul className="text-sm text-gray-700 space-y-1">
+                <li>• Interest-based problem generation</li>
+                <li>• Adaptive difficulty levels</li>
+                <li>• Learning style preferences</li>
+                <li>• Progress tracking</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
