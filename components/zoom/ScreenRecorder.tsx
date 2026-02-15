@@ -17,7 +17,6 @@ export default function ScreenRecorder({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const [preferSystemAudio, setPreferSystemAudio] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -37,71 +36,86 @@ export default function ScreenRecorder({
     return ""; // Let browser default
   };
 
+  const getErrName = (e: unknown) => {
+    if (e && typeof e === "object" && "name" in e) return String((e as any).name);
+    return "";
+  };
+
+  const getErrMessage = (e: unknown) => {
+    if (e instanceof Error) return e.message;
+    if (typeof e === "string") return e;
+    return "";
+  };
+
   const startRecording = async () => {
     try {
       setError(null);
       chunksRef.current = [];
 
-      // Audio-only recording for Vercel-friendly transfers.
-      // Default to mic (most reliable). Optionally, user can opt into attempting system audio.
-      let stream: MediaStream | null = null;
-      let gotSystemAudio = false;
+      // Screen record (video) BUT upload audio only:
+      // - Request display media to keep the "screen recording" UX (important for Zoom on Windows).
+      // - Record an audio-only stream (smaller upload, Vercel-friendly).
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true,
+      } as any);
 
-      // 1) Mic first (best chance of success and the least confusing permission prompt)
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          },
-          video: false,
-        });
-      } catch (micErr) {
-        console.error("Mic permission error:", micErr);
-        // If mic fails, we still allow user to try system audio below if they opted in.
-      }
+      const displayVideoTrack = displayStream.getVideoTracks()[0] ?? null;
+      const displayAudioTrack = displayStream.getAudioTracks()[0] ?? null;
 
-      // 2) Optional: attempt system audio (often restricted in embedded/webview contexts)
-      if ((!stream || stream.getAudioTracks().length === 0) && preferSystemAudio) {
+      // If system audio isn't provided from the display stream, fall back to mic.
+      let micStream: MediaStream | null = null;
+      let micTrack: MediaStreamTrack | null = null;
+
+      if (!displayAudioTrack) {
         try {
-          const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          micStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
             video: false,
-            audio: true,
-          } as any);
-
-          const hasAudio = displayStream.getAudioTracks().length > 0;
-          if (hasAudio) {
-            // If we already have a mic stream, stop it and use system audio stream.
-            if (stream) {
-              stream.getTracks().forEach((t) => t.stop());
-            }
-            stream = displayStream;
-            gotSystemAudio = true;
-          } else {
-            displayStream.getTracks().forEach((t) => t.stop());
+          });
+          micTrack = micStream.getAudioTracks()[0] ?? null;
+        } catch (micErr) {
+          const name = getErrName(micErr);
+          if (name === "NotAllowedError" || name === "SecurityError") {
+            throw new Error(
+              "Microphone permission was blocked. Enable mic access for Zoom (Windows Settings → Privacy & security → Microphone, or macOS Privacy & Security → Microphone), then try again.",
+            );
           }
-        } catch (sysErr) {
-          console.warn("System audio capture failed:", sysErr);
+          throw micErr;
         }
       }
 
-      if (!stream || stream.getAudioTracks().length === 0) {
+      const audioTrack = displayAudioTrack ?? micTrack;
+      if (!audioTrack) {
         throw new Error(
-          "Couldn’t access audio. Please allow microphone access in macOS Privacy & Security → Microphone (and in Zoom), then try again.",
+          "Couldn’t capture any audio. Your environment may be blocking system audio and microphone access.",
         );
       }
 
-      streamRef.current = stream;
+      // Audio-only stream for the MediaRecorder
+      const audioOnlyStream = new MediaStream([audioTrack]);
+
+      // Keep references to tracks to stop them on cleanup.
+      // We keep the display video track running during recording so it is *actually* a screen recording session.
+      const cleanupTracks: MediaStreamTrack[] = [
+        ...(displayVideoTrack ? [displayVideoTrack] : []),
+        ...(displayAudioTrack ? [displayAudioTrack] : []),
+        ...(micTrack ? [micTrack] : []),
+      ];
+      streamRef.current = new MediaStream(cleanupTracks);
 
       const mimeType = pickSupportedMimeType();
       console.log("Using MIME type:", mimeType || "(browser default)", {
-        gotSystemAudio,
-        audioTracks: stream.getAudioTracks().length,
+        hasDisplayAudio: Boolean(displayAudioTrack),
+        usingMicFallback: Boolean(!displayAudioTrack && micTrack),
       });
 
       const mediaRecorder = new MediaRecorder(
-        stream,
+        audioOnlyStream,
         mimeType ? { mimeType, audioBitsPerSecond: 64000 } : { audioBitsPerSecond: 64000 },
       );
 
@@ -127,18 +141,27 @@ export default function ScreenRecorder({
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
 
-      // If user stops sharing / mic ends, stop recording.
-      const endTrack = stream.getAudioTracks()[0];
-      if (endTrack) {
-        endTrack.onended = () => stopRecording();
+      // If user stops sharing, stop recording.
+      if (displayVideoTrack) {
+        displayVideoTrack.onended = () => stopRecording();
       }
+
+      // If audio ends mid-flight, stop recording.
+      audioTrack.onended = () => stopRecording();
+
+      // Avoid unused var lint warnings in some setups
+      void micStream;
     } catch (err) {
       console.error("Recording error:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to start recording. Please grant permissions.",
-      );
+      const name = getErrName(err);
+      const msg = getErrMessage(err);
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setError(
+          "Permission denied. Please allow the screen capture prompt, and ensure microphone permission is enabled for Zoom.",
+        );
+        return;
+      }
+      setError(msg || "Failed to start recording. Please grant permissions.");
     }
   };
 
@@ -254,25 +277,13 @@ export default function ScreenRecorder({
     <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200">
       <div className="text-6xl mb-4">�️</div>
       <h3 className="text-xl font-semibold text-gray-900 mb-2">
-        {isRecording ? "Recording in Progress" : "Record Audio"}
+        {isRecording ? "Recording in Progress" : "Screen Record (Audio Only)"}
       </h3>
       <p className="text-sm text-gray-600 text-center max-w-md mb-6">
         {isRecording
-          ? "Recording audio. Stop when you're ready!"
-          : "Record audio to ask AI-powered questions."}
+          ? "Recording your screen plus audio-only upload. Stop when you're ready!"
+          : "We’ll screen-record your Zoom window, but only upload audio for fast transcription."}
       </p>
-
-      {!isRecording && !isProcessing && (
-        <label className="flex items-center gap-2 text-xs text-gray-600 mb-4 select-none">
-          <input
-            type="checkbox"
-            checked={preferSystemAudio}
-            onChange={(e) => setPreferSystemAudio(e.target.checked)}
-            className="h-4 w-4"
-          />
-          Try system audio (may not work in Zoom panel; mic is default)
-        </label>
-      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 max-w-md">
@@ -311,7 +322,7 @@ export default function ScreenRecorder({
 
       {!isRecording && !isProcessing && (
         <p className="text-xs text-gray-500 mt-4 text-center max-w-sm">
-          You’ll be asked for microphone permission. If you still get blocked, enable mic access for Zoom in macOS Privacy & Security → Microphone.
+          Pick your Zoom window when prompted. If system audio isn’t available, we’ll use your microphone.
         </p>
       )}
     </div>
