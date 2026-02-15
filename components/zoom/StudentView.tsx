@@ -493,30 +493,126 @@ export default function StudentView({ context, session }: StudentViewProps) {
         )}
 
         {activeTab === "personalized" && (
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">✨</div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Personalized Learning
-              </h3>
-              <p className="text-sm text-gray-600 mb-4 max-w-md mx-auto">
-                Get questions and practice problems tailored to your learning
-                style and interests. Based on today&apos;s discussion: &quot;
-                {session?.title || "Current lecture"}&quot;
-              </p>
-              <div className="bg-white border border-gray-200 rounded-lg p-4 max-w-md mx-auto text-left">
-                <p className="text-xs text-gray-500 mb-2">Coming Soon:</p>
-                <ul className="text-sm text-gray-700 space-y-1">
-                  <li>• Interest-based problem generation</li>
-                  <li>• Adaptive difficulty levels</li>
-                  <li>• Learning style preferences</li>
-                  <li>• Progress tracking</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <PersonalizedTab sessionId={session?.id || null} videoId={session?.video_id || null} />
         )}
       </div>
+    </div>
+  );
+}
+
+function PersonalizedTab({
+  sessionId,
+  videoId,
+}: {
+  sessionId: string | null;
+  videoId: string | null;
+}) {
+  const [interests, setInterests] = useState("sports, music");
+  const [topicHint, setTopicHint] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
+
+  const generate = async () => {
+    setIsGenerating(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // For live sessions, ask uses live_session_id for retrieval.
+          live_session_id: sessionId,
+          video_id: videoId,
+          is_live: true,
+          mode: "practice",
+          interest_tags: interests
+            .split(",")
+            .map((t) => t.trim())
+            .filter((t) => t),
+          question: topicHint.trim()
+            ? `Create personalized practice problems about: ${topicHint.trim()}`
+            : "Create personalized practice problems based on today’s lecture.",
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to generate practice problems");
+      }
+
+      setResult(data.answer);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to generate");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <h3 className="font-semibold text-gray-900">✨ Personalized practice</h3>
+        <p className="text-xs text-gray-600 mt-1">
+          Generate practice problems tailored to your interests, using the live session transcript as context.
+        </p>
+
+        <div className="mt-4 grid grid-cols-1 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Interests (comma-separated)
+            </label>
+            <input
+              value={interests}
+              onChange={(e) => setInterests(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent"
+              placeholder="e.g., basketball, fashion, gaming"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Topic (optional)
+            </label>
+            <input
+              value={topicHint}
+              onChange={(e) => setTopicHint(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent"
+              placeholder="e.g., conditional probability"
+            />
+          </div>
+
+          {error ? (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-2">
+              <p className="text-xs text-red-700">{error}</p>
+            </div>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={generate}
+            disabled={isGenerating || !sessionId}
+            className="w-full px-4 py-2 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGenerating ? "Generating…" : "Generate practice problems"}
+          </button>
+
+          {!sessionId ? (
+            <p className="text-xs text-gray-500">
+              Waiting for a live session connection before generating.
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      {result?.content ? (
+        <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Generated</h4>
+          <div className="text-sm text-gray-800 whitespace-pre-wrap">{result.content}</div>
+        </div>
+      ) : null}
     </div>
   );
 }
