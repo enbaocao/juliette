@@ -1,9 +1,25 @@
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const { data: video } = await supabaseAdmin
+    .from('videos')
+    .select('title')
+    .eq('id', id)
+    .single();
+
+  if (!video) return { title: 'Video' };
+  return {
+    title: video.title,
+    description: `Watch and learn from "${video.title}". Ask AI-powered questions and get explanations, practice problems, or animated visualizations.`,
+  };
 }
 
 export default async function VideoPage({ params }: PageProps) {
@@ -20,8 +36,11 @@ export default async function VideoPage({ params }: PageProps) {
     notFound();
   }
 
-  // Check transcription status
+  // Check video status
+  const isDownloading = video.status === 'downloading';
+  const isUploaded = video.status === 'uploaded';
   const isTranscribed = video.status === 'transcribed';
+  const isProcessing = isDownloading || isUploaded;
 
   return (
     <div className="min-h-screen p-8">
@@ -50,6 +69,13 @@ export default async function VideoPage({ params }: PageProps) {
                   Ready for Questions
                 </span>
               </>
+            ) : isDownloading ? (
+              <>
+                <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+                <span className="font-semibold text-blue-600 dark:text-blue-400">
+                  Downloading from YouTube
+                </span>
+              </>
             ) : (
               <>
                 <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" />
@@ -60,7 +86,19 @@ export default async function VideoPage({ params }: PageProps) {
             )}
           </div>
 
-          {!isTranscribed && (
+          {isDownloading && (
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                We're currently downloading your video from YouTube. This may take a few minutes
+                depending on the video size.
+              </p>
+              <p className="text-xs text-gray-500">
+                Once downloaded, the video will be automatically transcribed.
+              </p>
+            </div>
+          )}
+
+          {isUploaded && (
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 We're currently transcribing your video. This usually takes a few minutes depending
@@ -133,7 +171,9 @@ export default async function VideoPage({ params }: PageProps) {
               />
             </svg>
             <p className="text-gray-600 dark:text-gray-400">
-              Transcription in progress... Check back in a few minutes
+              {isDownloading
+                ? 'Downloading from YouTube... This may take a few minutes'
+                : 'Transcription in progress... Check back in a few minutes'}
             </p>
           </div>
         )}

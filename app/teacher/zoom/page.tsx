@@ -1,7 +1,8 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Zoom Integration - Teacher Dashboard',
+  title: 'Zoom Integration',
+  description: 'Set up Juliette for live Q&A in Zoom meetings. Students can ask questions during class and get instant AI-powered answers.',
 };
 
 export default function ZoomIntegrationPage() {
