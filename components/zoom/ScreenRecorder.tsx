@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface ScreenRecorderProps {
   sessionId: string;
@@ -13,23 +13,31 @@ export default function ScreenRecorder({
   onRecordingComplete,
   linkToSession = true,
 }: ScreenRecorderProps) {
-  const mediaDevices =
-    typeof navigator !== "undefined" ? navigator.mediaDevices : undefined;
-  const hasGetDisplayMedia =
-    Boolean(mediaDevices) && typeof (mediaDevices as any).getDisplayMedia === "function";
-
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const [mode, setMode] = useState<"screen" | "mic">(
-    hasGetDisplayMedia ? "screen" : "mic",
-  );
+  const [hasGetDisplayMedia, setHasGetDisplayMedia] = useState(false);
+  const [mode, setMode] = useState<"screen" | "mic">("mic");
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Some Zoom webviews can be sensitive to touching navigator/mediaDevices during initial render.
+    // Detect capabilities after mount.
+    try {
+      const md = typeof navigator !== "undefined" ? navigator.mediaDevices : undefined;
+      const has = Boolean(md) && typeof (md as any).getDisplayMedia === "function";
+      setHasGetDisplayMedia(has);
+      setMode(has ? "screen" : "mic");
+    } catch {
+      setHasGetDisplayMedia(false);
+      setMode("mic");
+    }
+  }, []);
 
   const pickSupportedMimeType = () => {
     // Prefer Opus in WebM (best-supported in Chromium-based browsers, incl. Zoom Apps)
@@ -59,6 +67,8 @@ export default function ScreenRecorder({
     try {
       setError(null);
       chunksRef.current = [];
+
+      const mediaDevices = typeof navigator !== "undefined" ? navigator.mediaDevices : undefined;
 
       const wantsScreen = mode === "screen";
 
