@@ -201,7 +201,9 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <button
             onClick={() => setActiveTab("questions")}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'questions' ? 'border-[#ffc8dd] text-[#1a1a1a]' : 'border-transparent text-gray-600 hover:text-gray-900'
+              activeTab === "questions"
+                ? "border-[#ffc8dd] text-[#1a1a1a]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
             💬 Q&A
@@ -210,6 +212,31 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <button
             onClick={() => setActiveTab("manim")}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "manim"
+                ? "border-[#ffc8dd] text-[#1a1a1a]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            🎬 Manim
+          </button>
+
+          <button
+            onClick={() => setActiveTab("personalized")}
+            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "personalized"
+                ? "border-[#ffc8dd] text-[#1a1a1a]"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            ✨ Personalized
+          </button>
+        </div>
+
+        {activeTab === "questions" && (
+          <div className="flex-1 overflow-y-auto p-4 flex gap-4">
+            <div className="w-1/2 bg-white rounded-lg p-4 border border-gray-100">
+              <h3 className="font-semibold text-gray-900 mb-3">
+                Ask a question
               </h3>
               <textarea
                 value={question}
@@ -225,23 +252,32 @@ export default function StudentView({ context, session }: StudentViewProps) {
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
-                    onClick={() => setMode('simple')}
-                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'simple' ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                      }`}
+                    onClick={() => setMode("simple")}
+                    className={`px-3 py-2 text-xs rounded-lg border ${
+                      mode === "simple"
+                        ? "bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
                   >
                     Simple
                   </button>
                   <button
-                    onClick={() => setMode('practice')}
-                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'practice' ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                      }`}
+                    onClick={() => setMode("practice")}
+                    className={`px-3 py-2 text-xs rounded-lg border ${
+                      mode === "practice"
+                        ? "bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
                   >
                     Practice
                   </button>
                   <button
-                    onClick={() => setMode('animation')}
-                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'animation' ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                      }`}
+                    onClick={() => setMode("animation")}
+                    className={`px-3 py-2 text-xs rounded-lg border ${
+                      mode === "animation"
+                        ? "bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
                   >
                     Animation
                   </button>
@@ -300,13 +336,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
                           Q: {q.question}
                         </p>
                         <span
-                          className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-                            q.mode === "simple"
-                              ? "bg-blue-100 text-blue-800"
-                              : q.mode === "practice"
-                                ? "bg-purple-100 text-purple-800"
-                                : "bg-green-100 text-green-800"
-                          }`}
+                          className={`ml-2 px-2 py-0.5 text-xs rounded-full ${q.mode === "simple" ? "bg-blue-100 text-blue-800" : q.mode === "practice" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800"}`}
                         >
                           {q.mode}
                         </span>
