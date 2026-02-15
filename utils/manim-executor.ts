@@ -51,8 +51,8 @@ export async function executeManimCode(
 
     try {
       const { stdout, stderr } = await execAsync(manimCommand, {
-        timeout: 90000, // 90 second timeout (increased for higher quality)
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer for output
+        timeout: 180000, // 180 second timeout (3 minutes for complex animations)
+        maxBuffer: 20 * 1024 * 1024, // 20MB buffer for output (Manim can be verbose)
       });
 
       console.log('Manim execution completed');
@@ -124,6 +124,15 @@ export async function executeManimCode(
     } catch (execError: any) {
       console.error('❌ Manim execution error:', execError);
 
+      // Check for timeout
+      if (execError.killed && execError.signal === 'SIGTERM') {
+        return {
+          success: false,
+          error: 'Animation rendering timed out (exceeded 3 minutes). Try reducing duration or simplifying the animation.',
+          logs: (execError.stdout || '') + '\n' + (execError.stderr || ''),
+        };
+      }
+
       // Check if Manim is installed
       if (execError.message?.includes('command not found') || execError.code === 127) {
         return {
@@ -151,6 +160,50 @@ export async function executeManimCode(
           error: `Manim error: ${errorMsg}`,
           logs: execError.stderr,
         };
+      }
+
+      // If we got this far and there's stderr output, it might have succeeded partially
+      // Check if video was actually generated despite error exit code
+      const videoFiles = findVideoFiles(outputDir);
+      if (videoFiles.length > 0 && fs.existsSync(videoFiles[0])) {
+        console.log('⚠️ Command had non-zero exit but video was generated, continuing...');
+        const videoPath = videoFiles[0];
+        const stats = fs.statSync(videoPath);
+
+        if (stats.size > 0) {
+          // Video exists and is not empty - treat as success
+          console.log('📤 Uploading to Supabase Storage...');
+          const videoBuffer = fs.readFileSync(videoPath);
+          const storagePath = `animations/${outputName}.mp4`;
+
+          const { data: uploadData, error: uploadError } = await supabaseAdmin
+            .storage
+            .from('videos')
+            .upload(storagePath, videoBuffer, {
+              contentType: 'video/mp4',
+              upsert: true,
+            });
+
+          if (!uploadError) {
+            const { data: urlData } = supabaseAdmin
+              .storage
+              .from('videos')
+              .getPublicUrl(storagePath);
+
+            // Cleanup temp directory
+            try {
+              fs.rmSync(tempDir, { recursive: true, force: true });
+            } catch (cleanupError) {
+              console.warn('Warning: Could not cleanup temp directory:', cleanupError);
+            }
+
+            return {
+              success: true,
+              videoPath: urlData.publicUrl,
+              logs: (execError.stdout || '') + '\n' + (execError.stderr || ''),
+            };
+          }
+        }
       }
 
       return {
