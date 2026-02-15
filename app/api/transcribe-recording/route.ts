@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { createClient } from "@/lib/supabase/server";
-import { openai } from "@/lib/openai";
 
 // Configure route
 export const runtime = "nodejs";
@@ -175,6 +174,11 @@ export async function POST(request: NextRequest) {
     const segments = (transcription as any).segments || [];
     console.log(`✅ Transcribed ${segments.length} segments`);
 
+    // Build full transcript text
+    const fullText = (transcription as any).text
+      ? String((transcription as any).text)
+      : segments.map((s: any) => String(s?.text || '')).join(' ').trim();
+
     // Chunk the transcript
     const chunks = chunkTranscript(segments, 60);
     console.log(`📦 Created ${chunks.length} chunks`);
@@ -200,6 +204,17 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("✅ Saved transcript chunks to database");
+
+    // Store the full transcript text on the video record if a column exists.
+    // This is best-effort: it won't fail the request if your schema doesn't have this column.
+    try {
+      await supabaseAdmin
+        .from('videos')
+        .update({ transcript: fullText } as any)
+        .eq('id', video.id);
+    } catch {
+      // ignore
+    }
 
     // Update video status to transcribed
     await supabaseAdmin

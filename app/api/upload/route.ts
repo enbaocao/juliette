@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { createClient } from '@/lib/supabase/server';
-import { randomUUID } from 'crypto';
 
 // Configure route to handle larger uploads
 export const runtime = 'nodejs';
@@ -24,27 +23,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${randomUUID()}.${fileExt}`;
-    const storagePath = `videos/${userId}/${fileName}`;
-
-    // Upload file to Supabase Storage
-    const fileBuffer = await file.arrayBuffer();
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from('videos')
-      .upload(storagePath, fileBuffer, {
-        contentType: file.type,
-        cacheControl: '3600',
-      });
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      return NextResponse.json(
-        { error: 'Failed to upload file: ' + uploadError.message },
-        { status: 500 }
-      );
-    }
+    // NOTE: For the Zoom app flow we do NOT upload the media file to Supabase Storage.
+    // We only persist the transcript in DB after Whisper finishes.
 
     // Create video record in database
     const { data: video, error: dbError } = await supabaseAdmin
@@ -52,7 +32,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: userId,
         title,
-        storage_path: storagePath,
+        storage_path: null,
         status: 'uploaded',
       })
       .select()
@@ -60,20 +40,24 @@ export async function POST(request: NextRequest) {
 
     if (dbError) {
       console.error('Database error:', dbError);
-      // Clean up uploaded file
-      await supabaseAdmin.storage.from('videos').remove([storagePath]);
       return NextResponse.json(
         { error: 'Failed to create video record: ' + dbError.message },
         { status: 500 }
       );
     }
 
-    // Create transcription job
+    // Create transcription job (store the uploaded audio bytes directly in the job payload)
+    // This avoids any attempt to store the media in Supabase Storage.
+    const arrayBuffer = await file.arrayBuffer();
+    const base64 = Buffer.from(arrayBuffer).toString('base64');
+
     const { error: jobError } = await supabaseAdmin.from('jobs').insert({
       type: 'transcribe',
       payload: {
         video_id: video.id,
-        storage_path: storagePath,
+        filename: file.name,
+        content_type: file.type,
+        audio_base64: base64,
       },
       status: 'pending',
     });
@@ -86,7 +70,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       videoId: video.id,
-      message: 'Video uploaded successfully. Transcription will begin shortly.',
+      message: 'Upload received. Transcription will begin shortly.',
     });
   } catch (error) {
     console.error('Upload error:', error);
