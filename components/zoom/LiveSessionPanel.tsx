@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ZoomMeetingContext } from '@/hooks/useZoomApp';
 import { LiveSession } from '@/lib/types';
 import HostControls from './HostControls';
-import SimpleStudentView from './SimpleStudentView';
+import StudentView from './StudentView';
 
 interface LiveSessionPanelProps {
   context: ZoomMeetingContext;
@@ -14,17 +14,13 @@ export default function LiveSessionPanel({ context }: LiveSessionPanelProps) {
   const [session, setSession] = useState<LiveSession | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
 
-  // Check if there's an active session for this meeting (only for hosts)
+  // Check if there's an active session for this meeting (hosts + students)
   useEffect(() => {
-    if (context.role !== 'host') {
-      setIsLoadingSession(false);
-      return;
-    }
-
     const checkSession = async () => {
       try {
+        const meetingNumberKey = (context.meetingNumber || '').replace(/\D/g, '');
         const response = await fetch(
-          `/api/live-sessions/check?meeting_uuid=${encodeURIComponent(context.meetingUUID)}`
+          `/api/live-sessions/check?meeting_number=${encodeURIComponent(meetingNumberKey)}`
         );
 
         if (response.ok) {
@@ -43,7 +39,7 @@ export default function LiveSessionPanel({ context }: LiveSessionPanelProps) {
     // Poll for session updates every 10 seconds
     const interval = setInterval(checkSession, 10000);
     return () => clearInterval(interval);
-  }, [context.meetingUUID, context.role]);
+  }, [context.meetingNumber]);
 
   const handleSessionCreated = (newSession: LiveSession) => {
     setSession(newSession);
@@ -61,9 +57,9 @@ export default function LiveSessionPanel({ context }: LiveSessionPanelProps) {
     );
   }
 
-  // Students get the simple recording interface
+  // Students auto-join the live session (no recording in Zoom)
   if (context.role !== 'host') {
-    return <SimpleStudentView context={context} />;
+    return <StudentView context={context} session={session} />;
   }
 
   // Hosts get the full controls

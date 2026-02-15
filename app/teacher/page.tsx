@@ -109,6 +109,21 @@ export default async function TeacherDashboard() {
         <h1 className="text-3xl font-bold text-gray-900">Teacher Dashboard</h1>
         <p className="text-gray-600 mt-2">Question volume and where students are getting stuck.</p>
 
+        <div className="mt-8 bg-white border rounded-xl p-6 flex items-start justify-between gap-6">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Live Session (Website Recorder)</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Record your mic on the website and have students in Zoom auto-join by meeting UUID.
+            </p>
+          </div>
+          <a
+            href="/teacher/live"
+            className="shrink-0 px-4 py-2 bg-[#ffc8dd] hover:bg-[#ffbcd5] text-[#1a1a1a] rounded-lg transition-colors font-medium"
+          >
+            Open live recorder →
+          </a>
+        </div>
+
         <div className="mt-8 bg-white border rounded-xl p-8">
           <p className="text-sm uppercase tracking-wide text-gray-500">Student Questions Asked</p>
           <p className="text-5xl font-bold text-gray-900 mt-3">{insights.totalQuestions}</p>

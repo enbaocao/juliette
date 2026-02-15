@@ -28,7 +28,9 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     const path = request.nextUrl.pathname;
-    if ((path === '/upload' || path.startsWith('/teacher')) && !user) {
+  const isTeacherLiveRecorder = path === '/teacher/live' || path.startsWith('/teacher/live/');
+
+    if ((path === '/upload' || path.startsWith('/teacher')) && !isTeacherLiveRecorder && !user) {
       const redirectUrl = new URL('/', request.url);
       redirectUrl.searchParams.set('next', path);
       return NextResponse.redirect(redirectUrl);

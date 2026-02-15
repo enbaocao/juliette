@@ -9,10 +9,15 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const meetingUuid = searchParams.get('meeting_uuid');
+    const meetingNumber = searchParams.get('meeting_number');
+    const meetingNumberKey = (meetingNumber || '').replace(/\D/g, '');
 
-    if (!meetingUuid) {
+    // Prefer meeting_number if provided. Fall back to meeting_uuid for older clients.
+    const lookupMeetingNumber = meetingNumberKey || (meetingUuid || '').replace(/\D/g, '');
+
+    if (!lookupMeetingNumber) {
       return NextResponse.json(
-        { error: 'meeting_uuid is required' },
+        { error: 'meeting_number (or meeting_uuid) is required' },
         { status: 400 }
       );
     }
@@ -23,7 +28,7 @@ export async function GET(request: NextRequest) {
     const { data: session, error } = await supabase
       .from('live_sessions')
       .select('*')
-      .eq('meeting_uuid', meetingUuid)
+      .eq('meeting_number', lookupMeetingNumber)
       .eq('status', 'active')
       .single();
 
