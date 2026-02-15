@@ -62,10 +62,11 @@ export default function Home() {
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-8 md:p-12 lg:p-16">
         <div className="relative w-full max-w-lg aspect-[4/3] md:aspect-square rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100">
           <Image
-            src="/hero-image.png"
-            alt="Students studying late at night"
-            fill
-            className="object-cover"
+            src="/juliette.jpg"
+            alt="Juliette"
+            width={200}
+            height={200}
+            className="rounded-lg object-cover"
             priority
           />
         </div>

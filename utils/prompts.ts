@@ -88,29 +88,44 @@ export const ANIMATION_TEMPLATES: AnimationTemplate[] = [
 
 export function buildAnimationModePrompt(
   question: string,
-  chunks: TranscriptChunk[]
+  chunks: TranscriptChunk[],
+  prerenderedSuggestion?: { title: string; description: string; filename: string } | null
 ): { system: string; user: string } {
   const templatesDesc = ANIMATION_TEMPLATES.map(
     (t) => `- ${t.name}: ${t.description} (params: ${t.parameters.join(', ')})`
   ).join('\n');
 
+  // If we found a pre-rendered match, strongly suggest it
+  const prerenderedContext = prerenderedSuggestion
+    ? `\n\n🎯 PRE-RENDERED MATCH FOUND (INSTANT, PREFERRED):
+Title: ${prerenderedSuggestion.title}
+Description: ${prerenderedSuggestion.description}
+Filename: ${prerenderedSuggestion.filename}
+
+This animation is ALREADY RENDERED and can be served INSTANTLY. Only use custom rendering if this pre-rendered animation is clearly insufficient for the student's question.`
+    : '';
+
   return {
     system: `You are an educational AI assistant creating animation specifications.
-Your task is to analyze the question and video content, then specify which animation template to use and what parameters.
+Your task is to analyze the question and video content, then decide:
+1. Use a pre-rendered animation if one matches (instant, preferred)
+2. OR specify a custom template to render (20-30s delay)
 
-Available templates:
-${templatesDesc}
+Available custom templates:
+${templatesDesc}${prerenderedContext}
 
 Guidelines:
-- Choose the most appropriate template for the concept
-- Provide specific parameter values (NOT code, just values)
+- PREFER pre-rendered animations when available (instant delivery)
+- Only use custom rendering if the student needs specific parameters
 - Include a brief explanation of what the animation will show
 - Reference the relevant video timestamps
 
 Response format (JSON):
 {
-  "template": "template_name",
-  "parameters": { "param1": "value1", ... },
+  "strategy": "prerendered" | "custom",
+  "prerendered_filename": "filename.mp4" (if strategy=prerendered),
+  "template": "template_name" (if strategy=custom),
+  "parameters": { "param1": "value1", ... } (if strategy=custom),
   "explanation": "Brief explanation of what the animation shows",
   "video_references": [{"start_sec": 120, "end_sec": 180, "text": "..."}]
 }`,
@@ -119,6 +134,6 @@ ${formatChunksForPrompt(chunks)}
 
 Student Question: ${question}
 
-Please specify the animation template and parameters as JSON.`,
+Please specify the animation strategy (prerendered or custom) as JSON.`,
   };
 }

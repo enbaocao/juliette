@@ -7,6 +7,7 @@ import {
   buildPracticeModePrompt,
   buildAnimationModePrompt,
 } from '@/utils/prompts';
+import { findClosestAnimation, getAnimationUrl } from '@/lib/animation-library';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,6 +41,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // For animation mode, check pre-rendered library first
+    let prerenderedMatch = null;
+    if (mode === 'animation') {
+      prerenderedMatch = findClosestAnimation(question);
+      console.log('Pre-rendered match:', prerenderedMatch ? prerenderedMatch.entry.title : 'none');
+    }
+
     // Build prompt based on mode
     let prompt;
     switch (mode) {
@@ -50,13 +58,21 @@ export async function POST(request: NextRequest) {
         prompt = buildPracticeModePrompt(question, chunks, interestTags);
         break;
       case 'animation':
-        prompt = buildAnimationModePrompt(question, chunks);
+        prompt = buildAnimationModePrompt(
+          question,
+          chunks,
+          prerenderedMatch ? {
+            title: prerenderedMatch.entry.title,
+            description: prerenderedMatch.entry.description,
+            filename: prerenderedMatch.entry.filename,
+          } : null
+        );
         break;
     }
 
     // Call OpenAI
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: prompt.system },
         { role: 'user', content: prompt.user },
@@ -76,7 +92,7 @@ export async function POST(request: NextRequest) {
       })),
     };
 
-    // If animation mode, parse JSON response and create render job
+    // If animation mode, parse JSON response and handle accordingly
     if (mode === 'animation') {
       try {
         const animationSpec = JSON.parse(responseContent);
@@ -85,18 +101,37 @@ export async function POST(request: NextRequest) {
           animation_spec: animationSpec,
         };
 
-        // Create render job (for future implementation)
-        await supabaseAdmin.from('jobs').insert({
-          type: 'render',
-          payload: {
-            video_id: videoId,
-            template: animationSpec.template,
-            params: animationSpec.parameters,
-          },
-          status: 'pending',
-        });
+        // Check if LLM chose pre-rendered or custom
+        if (animationSpec.strategy === 'prerendered' && animationSpec.prerendered_filename) {
+          // Serve pre-rendered animation instantly
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+          const animationUrl = getAnimationUrl(supabaseUrl, animationSpec.prerendered_filename);
 
-        answer.animation_status = 'rendering';
+          answer.animation_url = animationUrl;
+          answer.animation_status = 'ready';
+          answer.delivery_time = 'instant';
+
+          console.log('✓ Serving pre-rendered animation:', animationSpec.prerendered_filename);
+        } else if (animationSpec.strategy === 'custom' && animationSpec.template) {
+          // Create render job for custom animation
+          await supabaseAdmin.from('jobs').insert({
+            type: 'render',
+            payload: {
+              video_id: videoId,
+              template: animationSpec.template,
+              params: animationSpec.parameters,
+            },
+            status: 'pending',
+          });
+
+          answer.animation_status = 'rendering';
+          answer.delivery_time = '20-30 seconds';
+
+          console.log('⏳ Creating render job for custom animation:', animationSpec.template);
+        } else {
+          // Fallback: treat as text response if strategy unclear
+          console.warn('Animation spec missing strategy or required fields:', animationSpec);
+        }
       } catch (e) {
         // If JSON parsing fails, treat as text response
         console.error('Failed to parse animation JSON:', e);
