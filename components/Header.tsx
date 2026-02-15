@@ -4,8 +4,14 @@ import { createClient } from '@/lib/supabase/server';
 import SignOutButton from '@/components/auth/SignOutButton';
 
 export default async function Header() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user: { email?: string } | null = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Supabase/auth failed - show header without user (logged-out state)
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 lg:px-14 py-4 bg-white/95 backdrop-blur-sm border-b border-gray-100">

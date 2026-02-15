@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { Suspense } from 'react';
 import AuthForm from '@/components/auth/AuthForm';
 import SignOutButton from '@/components/auth/SignOutButton';
 import { createClient } from '@/lib/supabase/server';
@@ -11,8 +12,14 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user: { email?: string } | null = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Auth failed - show logged-out state
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAFC] flex flex-col lg:flex-row text-[#1a1a1a]">
@@ -39,7 +46,9 @@ export default async function Home() {
           ) : (
             <>
               <div className="bg-[#FAFAFC] p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
-                <AuthForm />
+                <Suspense fallback={<div className="py-4 text-center text-gray-500">Loading…</div>}>
+                  <AuthForm />
+                </Suspense>
               </div>
 
               <div className="mt-12 flex justify-center">

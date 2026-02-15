@@ -7,32 +7,36 @@ export async function updateSession(request: NextRequest) {
     request: { headers: request.headers },
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options ?? {})
+            );
+          },
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options ?? {})
-          );
-        },
-      },
+      }
+    );
+
+    // Refresh session - required for Server Components
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Protect /upload and /teacher - redirect to home with next param if not authenticated
+    const path = request.nextUrl.pathname;
+    if ((path === '/upload' || path.startsWith('/teacher')) && !user) {
+      const redirectUrl = new URL('/', request.url);
+      redirectUrl.searchParams.set('next', path);
+      return NextResponse.redirect(redirectUrl);
     }
-  );
-
-  // Refresh session - required for Server Components
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Protect /upload and /teacher - redirect to home with next param if not authenticated
-  const path = request.nextUrl.pathname;
-  if ((path === '/upload' || path.startsWith('/teacher')) && !user) {
-    const redirectUrl = new URL('/', request.url);
-    redirectUrl.searchParams.set('next', path);
-    return NextResponse.redirect(redirectUrl);
+  } catch {
+    // Auth/session refresh failed - allow request through, pages will handle auth
   }
 
   return response;

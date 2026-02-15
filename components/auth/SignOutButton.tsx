@@ -1,22 +1,31 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SignOutButton() {
+  const [signingOut, setSigningOut] = useState(false);
+  const router = useRouter();
   const supabase = createClient();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/';
+    setSigningOut(true);
+    // scope: 'local' = instant, no server round-trip
+    await supabase.auth.signOut({ scope: 'local' });
+    router.push('/');
+    router.refresh();
+    setSigningOut(false);
   };
 
   return (
     <button
       type="button"
       onClick={handleSignOut}
-      className="text-sm text-gray-500 hover:text-gray-700 underline"
+      disabled={signingOut}
+      className="text-sm text-gray-500 hover:text-gray-700 underline disabled:opacity-50 disabled:cursor-wait"
     >
-      Sign out
+      {signingOut ? 'Signing out…' : 'Sign out'}
     </button>
   );
 }
