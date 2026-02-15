@@ -24,6 +24,8 @@ RUN npx tsc \
     --moduleResolution node \
     --skipLibCheck \
     --resolveJsonModule \
+    --baseUrl . \
+    --paths '{"@/*":["./*"]}' \
     docker/manim-api-server.ts \
     lib/*.ts \
     utils/manim-generator.ts \

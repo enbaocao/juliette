@@ -7,6 +7,14 @@ const MANIM_API_URL = process.env.MANIM_API_URL;
 const RENDER_API_SECRET = process.env.RENDER_API_SECRET;
 
 export async function POST(request: NextRequest) {
+  // Debug: Log configuration
+  console.log('📋 Animation API Configuration:', {
+    hasManimApiUrl: !!MANIM_API_URL,
+    manimApiUrl: MANIM_API_URL || 'not set',
+    hasApiSecret: !!RENDER_API_SECRET,
+    mode: MANIM_API_URL ? 'proxy to Render' : 'local execution',
+  });
+
   // If MANIM_API_URL is set, proxy to the Render-hosted Manim API service
   if (MANIM_API_URL) {
     try {
@@ -23,6 +31,29 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify(body),
       });
 
+      // Check content type before parsing
+      const contentType = response.headers.get('content-type');
+
+      if (!contentType || !contentType.includes('application/json')) {
+        // Got HTML or other non-JSON response (likely an error page)
+        const text = await response.text();
+        console.error('❌ Non-JSON response from Render:', text.substring(0, 500));
+
+        return NextResponse.json(
+          {
+            error: 'Animation service returned invalid response',
+            message: `Expected JSON but got ${contentType || 'unknown content type'}`,
+            details: response.status === 404
+              ? 'Service not found - check MANIM_API_URL is correct'
+              : response.status >= 500
+              ? 'Service error - check Render service logs'
+              : 'Unexpected response from service',
+            statusCode: response.status,
+          },
+          { status: response.status }
+        );
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -38,6 +69,7 @@ export async function POST(request: NextRequest) {
         {
           error: 'Failed to connect to animation service',
           message: error instanceof Error ? error.message : 'Unknown error',
+          hint: 'Check that MANIM_API_URL is correct and service is running',
         },
         { status: 500 }
       );
