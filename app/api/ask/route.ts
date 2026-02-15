@@ -12,6 +12,8 @@ import {
 } from "@/utils/prompts";
 import { findClosestAnimation, getAnimationUrl } from "@/lib/animation-library";
 
+import { TranscriptChunk } from "@/lib/types";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     // Retrieve relevant transcript chunks
     // For live sessions, prioritize real-time chunks
-    let chunks = [];
+    let chunks: TranscriptChunk[] = [];
     if (liveSessionId || videoId) {
       chunks = await retrieveRelevantChunksEnhanced(question, {
         videoId: videoId,
@@ -81,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Build prompt based on mode
-    let prompt;
+    let prompt: { system: string; user: string } = { system: "", user: "" };
     switch (mode) {
       case "simple":
         prompt = buildSimpleModePrompt(question, chunks);
@@ -95,10 +97,10 @@ export async function POST(request: NextRequest) {
           chunks,
           prerenderedMatch
             ? {
-                title: prerenderedMatch.entry.title,
-                description: prerenderedMatch.entry.description,
-                filename: prerenderedMatch.entry.filename,
-              }
+              title: prerenderedMatch.entry.title,
+              description: prerenderedMatch.entry.description,
+              filename: prerenderedMatch.entry.filename,
+            }
             : null,
         );
         break;
