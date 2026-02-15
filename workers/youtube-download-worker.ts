@@ -4,12 +4,24 @@ import * as path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 // Now import everything else
-import { supabaseAdmin } from '@/lib/supabase-server';
-import { Job } from '@/lib/types';
+import { createClient } from '@supabase/supabase-js';
+import { Job } from '../lib/types';
 import * as fs from 'fs';
 import * as os from 'os';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+
+// Create Supabase client after env vars are loaded
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 const execFileAsync = promisify(execFile);
 const POLLING_INTERVAL = 5000; // 5 seconds
