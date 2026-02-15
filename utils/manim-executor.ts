@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { supabaseAdmin } from '@/lib/supabase-server';
 
 const execAsync = promisify(exec);
 
@@ -77,27 +78,47 @@ export async function executeManimCode(
 
       console.log('Video size:', (stats.size / 1024).toFixed(2), 'KB');
 
-      // Copy to public/animations directory
-      const publicDir = path.join(process.cwd(), 'public', 'animations');
-      if (!fs.existsSync(publicDir)) {
-        fs.mkdirSync(publicDir, { recursive: true });
+      // Upload to Supabase Storage (required for Render deployment - ephemeral filesystem)
+      console.log('📤 Uploading to Supabase Storage...');
+
+      const videoBuffer = fs.readFileSync(videoPath);
+      const storagePath = `animations/${outputName}.mp4`;
+
+      const { data: uploadData, error: uploadError } = await supabaseAdmin
+        .storage
+        .from('videos')
+        .upload(storagePath, videoBuffer, {
+          contentType: 'video/mp4',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error('❌ Failed to upload to Supabase Storage:', uploadError);
+        throw new Error(`Supabase upload failed: ${uploadError.message}`);
       }
 
-      const finalPath = path.join(publicDir, `${outputName}.mp4`);
-      fs.copyFileSync(videoPath, finalPath);
+      console.log('✅ Uploaded to Supabase Storage:', uploadData.path);
 
-      console.log('✅ Video saved to:', finalPath);
+      // Get public URL (if bucket is public) or signed URL
+      const { data: urlData } = supabaseAdmin
+        .storage
+        .from('videos')
+        .getPublicUrl(storagePath);
+
+      const publicUrl = urlData.publicUrl;
+      console.log('🔗 Public URL:', publicUrl);
 
       // Cleanup temp directory
       try {
         fs.rmSync(tempDir, { recursive: true, force: true });
+        console.log('🧹 Cleaned up temp directory');
       } catch (cleanupError) {
         console.warn('Warning: Could not cleanup temp directory:', cleanupError);
       }
 
       return {
         success: true,
-        videoPath: `/animations/${outputName}.mp4`,
+        videoPath: publicUrl, // Return Supabase Storage URL instead of local path
         logs: stdout,
       };
     } catch (execError: any) {

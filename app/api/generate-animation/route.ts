@@ -2,7 +2,51 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateManimCode, createFallbackAnimation } from '@/utils/manim-generator';
 import { executeManimCode } from '@/utils/manim-executor';
 
+// Manim API URL for production (Render deployment)
+const MANIM_API_URL = process.env.MANIM_API_URL;
+const RENDER_API_SECRET = process.env.RENDER_API_SECRET;
+
 export async function POST(request: NextRequest) {
+  // If MANIM_API_URL is set, proxy to the Render-hosted Manim API service
+  if (MANIM_API_URL) {
+    try {
+      const body = await request.json();
+
+      console.log('🔄 Proxying animation request to Render:', MANIM_API_URL);
+
+      const response = await fetch(`${MANIM_API_URL}/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(RENDER_API_SECRET && { 'Authorization': `Bearer ${RENDER_API_SECRET}` }),
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ Render API error:', data);
+        return NextResponse.json(data, { status: response.status });
+      }
+
+      console.log('✅ Animation generated via Render');
+      return NextResponse.json(data);
+    } catch (error) {
+      console.error('❌ Proxy error:', error);
+      return NextResponse.json(
+        {
+          error: 'Failed to connect to animation service',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+        { status: 500 }
+      );
+    }
+  }
+
+  // Fallback to local execution for development
+  console.log('🏠 Running Manim locally (development mode)');
+
   try {
     const body = await request.json();
     const { context, duration = 12 } = body;
@@ -92,6 +136,27 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint for checking Manim installation
 export async function GET() {
+  // If using remote Manim API, check that service
+  if (MANIM_API_URL) {
+    try {
+      const response = await fetch(`${MANIM_API_URL}/check-manim`, {
+        headers: {
+          ...(RENDER_API_SECRET && { 'Authorization': `Bearer ${RENDER_API_SECRET}` }),
+        },
+      });
+
+      const data = await response.json();
+      return NextResponse.json(data);
+    } catch (error) {
+      return NextResponse.json({
+        status: 'Cannot reach Manim API service',
+        ready: false,
+        message: error instanceof Error ? error.message : 'Service unreachable',
+      });
+    }
+  }
+
+  // Check local Manim installation for development
   const { exec } = require('child_process');
   const { promisify } = require('util');
   const execAsync = promisify(exec);
@@ -99,12 +164,12 @@ export async function GET() {
   try {
     await execAsync('manim --version');
     return NextResponse.json({
-      status: 'Manim is installed',
+      status: 'Manim is installed locally',
       ready: true,
     });
   } catch (error) {
     return NextResponse.json({
-      status: 'Manim not installed',
+      status: 'Manim not installed locally',
       ready: false,
       message: 'Install Manim with: pip install manim',
     });
