@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
+import Header from "@/components/Header";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://juliette.app"),
@@ -47,7 +48,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${GeistSans.className} antialiased`}>
-        {children}
+        <Header />
+        <main className="pt-20">{children}</main>
       </body>
     </html>
   );
