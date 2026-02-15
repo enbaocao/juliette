@@ -2,9 +2,9 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
-import { RTMSConnectionManager } from './rtms-client';
+import { ZoomBotManager } from './bot-client';
 import { DatabaseWriter } from './database-writer';
-import { ZoomWebhookEvent, RTMSConfig } from './types';
+import { ZoomWebhookEvent } from './types';
 
 // Load environment variables
 dotenv.config();
@@ -17,8 +17,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Initialize connection manager
-const connectionManager = new RTMSConnectionManager();
+// Initialize bot manager
+const botManager = new ZoomBotManager();
 const db = new DatabaseWriter();
 
 /**
@@ -28,7 +28,7 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    activeSessions: connectionManager.getActiveSessions().length
+    activeSessions: botManager.getActiveSessions().length
   });
 });
 
@@ -74,14 +74,9 @@ app.post('/webhook/zoom', async (req: Request, res: Response) => {
       });
     }
 
-    // Handle RTMS started event
-    if (event.event === 'meeting.rtms_started') {
-      const { uuid: meetingUUID, rtms_stream_id: rtmsStreamId } = event.payload.object;
-
-      if (!rtmsStreamId) {
-        console.error('❌ No RTMS stream ID in webhook payload');
-        return res.status(400).json({ error: 'Missing RTMS stream ID' });
-      }
+    // Handle meeting started event (for bot joining)
+    if (event.event === 'meeting.started' || event.event === 'meeting.rtms_started') {
+      const { uuid: meetingUUID } = event.payload.object;
 
       // Find active live session for this meeting
       const liveSession = await db.getLiveSessionByMeetingUUID(meetingUUID);
@@ -93,17 +88,18 @@ app.post('/webhook/zoom', async (req: Request, res: Response) => {
 
       console.log(`✅ Found live session: ${liveSession.id}`);
 
-      // Start RTMS session
-      const config: RTMSConfig = {
-        meetingUUID,
+      // Start bot session
+      const config = {
         meetingNumber: liveSession.meeting_number,
-        rtmsStreamId,
-        liveSessionId: liveSession.id
+        password: liveSession.meeting_password || undefined,
+        userName: 'Juliette AI Assistant',
+        liveSessionId: liveSession.id,
+        sessionId: liveSession.id
       };
 
-      await connectionManager.startSession(config);
+      await botManager.startSession(config);
 
-      return res.status(200).json({ message: 'RTMS session started' });
+      return res.status(200).json({ message: 'Bot session started' });
     }
 
     // Acknowledge other events
@@ -116,69 +112,70 @@ app.post('/webhook/zoom', async (req: Request, res: Response) => {
 });
 
 /**
- * Start RTMS transcription manually
- * POST /rtms/start
+ * Start bot transcription manually
+ * POST /bot/start
  */
-app.post('/rtms/start', async (req: Request, res: Response) => {
+app.post('/bot/start', async (req: Request, res: Response) => {
   try {
-    const { meetingUUID, meetingNumber, rtmsStreamId, liveSessionId } = req.body;
+    const { meetingNumber, password, liveSessionId } = req.body;
 
-    if (!meetingUUID || !rtmsStreamId || !liveSessionId) {
+    if (!meetingNumber || !liveSessionId) {
       return res.status(400).json({
-        error: 'Missing required fields: meetingUUID, rtmsStreamId, liveSessionId'
+        error: 'Missing required fields: meetingNumber, liveSessionId'
       });
     }
 
-    const config: RTMSConfig = {
-      meetingUUID,
+    const config = {
       meetingNumber,
-      rtmsStreamId,
-      liveSessionId
+      password,
+      userName: 'Juliette AI Assistant',
+      liveSessionId,
+      sessionId: liveSessionId
     };
 
-    await connectionManager.startSession(config);
+    await botManager.startSession(config);
 
     res.status(200).json({
-      message: 'RTMS session started',
-      rtmsStreamId
+      message: 'Bot session started',
+      sessionId: liveSessionId
     });
 
   } catch (error: any) {
-    console.error('❌ Failed to start RTMS session:', error);
+    console.error('❌ Failed to start bot session:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * Stop RTMS transcription
- * POST /rtms/stop
+ * Stop bot transcription
+ * POST /bot/stop
  */
-app.post('/rtms/stop', async (req: Request, res: Response) => {
+app.post('/bot/stop', async (req: Request, res: Response) => {
   try {
-    const { rtmsStreamId } = req.body;
+    const { sessionId } = req.body;
 
-    if (!rtmsStreamId) {
-      return res.status(400).json({ error: 'Missing rtmsStreamId' });
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Missing sessionId' });
     }
 
-    await connectionManager.stopSession(rtmsStreamId);
+    await botManager.stopSession(sessionId);
 
-    res.status(200).json({ message: 'RTMS session stopped' });
+    res.status(200).json({ message: 'Bot session stopped' });
 
   } catch (error: any) {
-    console.error('❌ Failed to stop RTMS session:', error);
+    console.error('❌ Failed to stop bot session:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * Get RTMS session status
- * GET /rtms/status/:rtmsStreamId
+ * Get bot session status
+ * GET /bot/status/:sessionId
  */
-app.get('/rtms/status/:rtmsStreamId', (req: Request, res: Response) => {
+app.get('/bot/status/:sessionId', (req: Request, res: Response) => {
   try {
-    const { rtmsStreamId } = req.params;
-    const status = connectionManager.getSessionStatus(rtmsStreamId);
+    const { sessionId } = req.params;
+    const status = botManager.getSessionStatus(sessionId);
 
     if (!status) {
       return res.status(404).json({ error: 'Session not found' });
@@ -194,11 +191,11 @@ app.get('/rtms/status/:rtmsStreamId', (req: Request, res: Response) => {
 
 /**
  * Get all active sessions
- * GET /rtms/sessions
+ * GET /bot/sessions
  */
-app.get('/rtms/sessions', (req: Request, res: Response) => {
+app.get('/bot/sessions', (req: Request, res: Response) => {
   try {
-    const activeSessions = connectionManager.getActiveSessions();
+    const activeSessions = botManager.getActiveSessions();
 
     res.status(200).json({
       count: activeSessions.length,
@@ -235,7 +232,7 @@ function verifyWebhookSignature(
 process.on('SIGTERM', async () => {
   console.log('\n🛑 SIGTERM received, shutting down gracefully...');
 
-  await connectionManager.stopAllSessions();
+  await botManager.stopAllSessions();
 
   process.exit(0);
 });
@@ -243,7 +240,7 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   console.log('\n🛑 SIGINT received, shutting down gracefully...');
 
-  await connectionManager.stopAllSessions();
+  await botManager.stopAllSessions();
 
   process.exit(0);
 });
@@ -252,9 +249,9 @@ process.on('SIGINT', async () => {
  * Start server
  */
 app.listen(port, () => {
-  console.log(`\n🚀 RTMS Service started`);
+  console.log(`\n🚀 Zoom Bot Service started`);
   console.log(`   Port: ${port}`);
   console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`   Webhook endpoint: http://localhost:${port}/webhook/zoom`);
-  console.log(`\n✅ Ready to receive RTMS connections\n`);
+  console.log(`\n✅ Ready to connect bot to Zoom meetings\n`);
 });

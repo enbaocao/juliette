@@ -87,7 +87,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
       <div className="flex items-center justify-center h-full p-8">
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">📚</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2 className="text-xl font-semibold text-[#1a1a1a] mb-2">
             No Active Session
           </h2>
           <p className="text-gray-600">
@@ -102,24 +102,24 @@ export default function StudentView({ context, session }: StudentViewProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Session Info */}
-      <div className="bg-green-50 border-b border-green-200 p-3">
-        <p className="text-sm font-medium text-green-900">
+      <div className="bg-[#ffe5ec] border-b border-[#ffc2d1] p-3">
+        <p className="text-sm font-medium text-[#1a1a1a]">
           🟢 Live Session Active
         </p>
         {session.title && (
-          <p className="text-xs text-green-700 mt-1">{session.title}</p>
+          <p className="text-xs text-gray-700 mt-1">{session.title}</p>
         )}
       </div>
 
       {/* Question Input */}
-      <div className="border-b border-gray-200 p-4 bg-white">
-        <h3 className="font-semibold text-gray-900 mb-3">Ask a Question</h3>
+      <div className="border-b border-gray-100 p-4 bg-white">
+        <h3 className="font-semibold text-[#1a1a1a] mb-3">Ask a Question</h3>
 
         <textarea
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="What would you like to know about this lecture?"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none mb-3"
+          className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent resize-none mb-3 transition-all"
           rows={3}
         />
 
@@ -131,30 +131,30 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => setMode('simple')}
-              className={`px-3 py-2 text-xs rounded-lg border ${
+              className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
                 mode === 'simple'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc2d1] font-medium'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-[#ffc2d1]'
               }`}
             >
               Simple
             </button>
             <button
               onClick={() => setMode('practice')}
-              className={`px-3 py-2 text-xs rounded-lg border ${
+              className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
                 mode === 'practice'
-                  ? 'bg-purple-600 text-white border-purple-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc2d1] font-medium'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-[#ffc2d1]'
               }`}
             >
               Practice
             </button>
             <button
               onClick={() => setMode('animation')}
-              className={`px-3 py-2 text-xs rounded-lg border ${
+              className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
                 mode === 'animation'
-                  ? 'bg-green-600 text-white border-green-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc2d1] font-medium'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-[#ffc2d1]'
               }`}
             >
               Animation
@@ -173,7 +173,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
               value={interestTags}
               onChange={(e) => setInterestTags(e.target.value)}
               placeholder="e.g., sports, music, cooking"
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent transition-all"
             />
           </div>
         )}
@@ -187,15 +187,15 @@ export default function StudentView({ context, session }: StudentViewProps) {
         <button
           onClick={handleAskQuestion}
           disabled={!question.trim() || isAsking}
-          className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
           {isAsking ? 'Asking...' : 'Ask Question'}
         </button>
       </div>
 
       {/* Recent Questions Feed */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-        <h3 className="font-semibold text-gray-900 mb-3">Your Questions</h3>
+      <div className="flex-1 overflow-y-auto p-4 bg-[#FAFAFC]">
+        <h3 className="font-semibold text-[#1a1a1a] mb-3">Your Questions</h3>
 
         {recentQuestions.length === 0 ? (
           <p className="text-sm text-gray-500 text-center py-8">
@@ -206,20 +206,14 @@ export default function StudentView({ context, session }: StudentViewProps) {
             {recentQuestions.map((q) => (
               <div
                 key={q.id}
-                className="bg-white border border-gray-200 rounded-lg p-3"
+                className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <p className="text-sm font-medium text-gray-900 flex-1">
+                  <p className="text-sm font-medium text-[#1a1a1a] flex-1">
                     Q: {q.question}
                   </p>
                   <span
-                    className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-                      q.mode === 'simple'
-                        ? 'bg-blue-100 text-blue-800'
-                        : q.mode === 'practice'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}
+                    className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[#ffe5ec] text-gray-700 border border-[#ffc2d1]"
                   >
                     {q.mode}
                   </span>
@@ -250,7 +244,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
 
                 {!q.answer && (
                   <div className="mt-2 flex items-center text-xs text-gray-500">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-2"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#ffc8dd] mr-2"></div>
                     Generating answer...
                   </div>
                 )}

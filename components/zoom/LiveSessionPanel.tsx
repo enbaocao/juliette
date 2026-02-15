@@ -51,23 +51,23 @@ export default function LiveSessionPanel({ context }: LiveSessionPanelProps) {
   if (isLoadingSession) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ffc8dd]"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-[#FAFAFC]">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg">
-        <h1 className="text-xl font-bold">Juliette AI Assistant</h1>
-        <p className="text-sm text-blue-100 mt-1">
+      <div className="bg-white border-b border-gray-100 p-4 shadow-sm">
+        <h1 className="text-xl font-['Souvenir',sans-serif] font-medium text-[#1a1a1a]">Juliette</h1>
+        <p className="text-sm text-gray-600 mt-1">
           {context.role === 'host' ? '🎓 Teacher View' : '📚 Student View'}
         </p>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         {context.role === 'host' ? (
           <HostControls
             context={context}
@@ -84,7 +84,7 @@ export default function LiveSessionPanel({ context }: LiveSessionPanelProps) {
       </div>
 
       {/* Footer */}
-      <div className="bg-gray-50 border-t border-gray-200 p-2 text-center">
+      <div className="bg-white border-t border-gray-100 p-2 text-center">
         <p className="text-xs text-gray-500">
           Powered by Juliette AI • {context.userName}
         </p>
