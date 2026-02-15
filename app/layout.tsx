@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import ToastProvider from "@/components/ui/ToastProvider";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://juliette.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://juliette-six.vercel.app"),
   icons: {
     icon: "/logo.png",
   },

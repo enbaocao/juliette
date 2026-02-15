@@ -15,6 +15,8 @@ export default function AskPage({ params }: PageProps) {
   const [error, setError] = useState('');
   const [answer, setAnswer] = useState<any>(null);
   const [currentMode, setCurrentMode] = useState<QuestionMode>('simple');
+  const [lastQuestion, setLastQuestion] = useState('');
+  const [lastInterestTags, setLastInterestTags] = useState<string[]>([]);
 
   const handleSubmit = async (
     question: string,
@@ -25,6 +27,8 @@ export default function AskPage({ params }: PageProps) {
     setError('');
     setAnswer(null);
     setCurrentMode(mode);
+    setLastQuestion(question);
+    setLastInterestTags(interestTags || []);
 
     try {
       const response = await fetch('/api/ask', {
@@ -116,7 +120,12 @@ export default function AskPage({ params }: PageProps) {
         {answer && !loading && (
           <div>
             <h2 className="text-2xl font-bold mb-4">Answer</h2>
-            <AnswerDisplay answer={answer} mode={currentMode} />
+            <AnswerDisplay
+              answer={answer}
+              mode={currentMode}
+              question={lastQuestion}
+              interestTags={lastInterestTags}
+            />
           </div>
         )}
       </div>

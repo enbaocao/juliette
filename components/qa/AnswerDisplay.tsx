@@ -22,6 +22,8 @@ interface Answer {
 interface AnswerDisplayProps {
   answer: Answer;
   mode: string;
+  question?: string;
+  interestTags?: string[];
 }
 
 function formatTime(seconds: number): string {
@@ -37,8 +39,98 @@ function normalizeMathDelimiters(content: string): string {
     .replace(/\\\((.*?)\\\)/g, (_, expr) => `$${expr.trim()}$`);
 }
 
-export default function AnswerDisplay({ answer, mode }: AnswerDisplayProps) {
+function extractTopics(question: string): string[] {
+  const stopWords = new Set([
+    'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'how', 'i', 'in', 'is',
+    'it', 'of', 'on', 'or', 'that', 'the', 'this', 'to', 'what', 'with', 'you', 'your',
+  ]);
+
+  const counts = new Map<string, number>();
+  question
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !stopWords.has(word))
+    .forEach((word) => counts.set(word, (counts.get(word) || 0) + 1));
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([word]) => word.charAt(0).toUpperCase() + word.slice(1));
+}
+
+export default function AnswerDisplay({ answer, mode, question = '', interestTags = [] }: AnswerDisplayProps) {
   const renderedContent = normalizeMathDelimiters(answer.content || '');
+  const topics = extractTopics(question);
+
+  if (mode === 'practice') {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border">
+            <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Topics</p>
+            <div className="flex flex-wrap gap-2">
+              {topics.length > 0 ? (
+                topics.map((topic) => (
+                  <span key={topic} className="text-xs px-2 py-1 bg-white dark:bg-gray-800 border rounded-md">
+                    {topic}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-gray-500">No topics detected yet</span>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border">
+            <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Interests</p>
+            <div className="flex flex-wrap gap-2">
+              {interestTags.length > 0 ? (
+                interestTags.map((interest) => (
+                  <span
+                    key={interest}
+                    className="text-xs px-2 py-1 bg-white dark:bg-gray-800 border rounded-md"
+                  >
+                    {interest}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-gray-500">No interests provided</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border min-h-[420px]">
+            <h3 className="font-semibold mb-4 text-lg">Generated Problem</h3>
+            <div className="prose dark:prose-invert max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                components={{
+                  p: ({ children }) => <p className="whitespace-pre-wrap">{children}</p>,
+                }}
+              >
+                {renderedContent}
+              </ReactMarkdown>
+            </div>
+          </div>
+
+          <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border min-h-[420px]">
+            <h3 className="font-semibold mb-4 text-lg">Your Answer</h3>
+            <textarea
+              placeholder="Work through the problem here..."
+              className="w-full h-[340px] resize-none rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-xs text-gray-500 mt-3">
+              Your response is local-only for now (not saved yet).
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
