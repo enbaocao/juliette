@@ -1,9 +1,25 @@
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const { data: video } = await supabaseAdmin
+    .from('videos')
+    .select('title')
+    .eq('id', id)
+    .single();
+
+  if (!video) return { title: 'Video' };
+  return {
+    title: video.title,
+    description: `Watch and learn from "${video.title}". Ask AI-powered questions and get explanations, practice problems, or animated visualizations.`,
+  };
 }
 
 export default async function VideoPage({ params }: PageProps) {

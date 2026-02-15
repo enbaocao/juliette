@@ -2,7 +2,8 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Student Questions - Teacher Dashboard',
+  title: 'Student Questions',
+  description: 'Review all student questions across your videos. See answers, modes used, and engagement patterns.',
 };
 
 async function getAllQuestions() {

@@ -2,7 +2,8 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Video Library - Teacher Dashboard',
+  title: 'Video Library',
+  description: 'Browse and manage all your uploaded educational videos. View status and access each video for student Q&A.',
 };
 
 async function getVideosWithStats() {

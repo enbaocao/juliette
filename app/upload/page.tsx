@@ -1,8 +1,9 @@
 import VideoUpload from '@/components/upload/VideoUpload';
 
 export const metadata = {
-  title: 'Upload Video - Juliette',
-  description: 'Upload an educational video for transcription and AI-powered Q&A',
+  title: 'Upload Video',
+  description:
+    'Upload your educational video to Juliette. We automatically transcribe it so you can ask AI-powered questions and get explanations, practice problems, or animations.',
 };
 
 export default function UploadPage() {

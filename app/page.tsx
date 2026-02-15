@@ -1,9 +1,31 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
+export const metadata = {
+  title: "Welcome",
+  description:
+    "Juliette is your AI educational assistant. Upload videos, ask questions, and get personalized explanations, practice problems, and animated visualizations.",
+};
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#FAFAFC] flex flex-col lg:flex-row text-[#1a1a1a]">
+      {/* Header - homepage only */}
+      <header className="fixed top-8 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 lg:px-14 md:top-10">
+        <Link href="/" className="flex items-center hover:opacity-90 transition-opacity gap-0">
+          <Image src="/logo.png" alt="Juliette" width={56} height={56} className="flex-shrink-0" />
+          <span className="font-['Souvenir',sans-serif] text-3xl font-medium text-[#1a1a1a]">
+            Juliette
+          </span>
+        </Link>
+        <Link
+          href="/teacher"
+          className="py-2 px-4 rounded-lg text-sm font-medium text-[#1a1a1a] border border-gray-200 bg-white/80 hover:bg-white/90 hover:border-[#ffc2d1] transition-colors"
+        >
+          Teacher Login
+        </Link>
+      </header>
+
       {/* Left Column: Content */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 md:p-16 lg:p-24 pt-16 md:pt-24 lg:pt-32">
         <div className="max-w-lg w-full">
@@ -41,16 +63,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/teacher"
-              className="flex-1 py-3 px-6 bg-white border border-gray-200 hover:border-[#ffc2d1] text-gray-800 text-center font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
-            >
-              🎓 Teacher Dashboard
-            </Link>
+          <div className="mt-12 flex justify-center">
             <Link
               href="/upload"
-              className="flex-1 py-3 px-6 bg-white border border-gray-200 hover:border-[#ffc2d1] text-gray-800 text-center font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
+              className="py-3 px-8 bg-white border border-gray-200 hover:border-[#ffc2d1] text-gray-800 text-center font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
             >
               📹 Upload Video
             </Link>

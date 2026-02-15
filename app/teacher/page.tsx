@@ -2,8 +2,9 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Teacher Dashboard - Juliette',
-  description: 'Manage your educational videos and student interactions',
+  title: 'Teacher Dashboard',
+  description:
+    'Manage your educational videos, track student engagement, and view analytics. See recent questions and video library at a glance.',
 };
 
 async function getDashboardStats() {

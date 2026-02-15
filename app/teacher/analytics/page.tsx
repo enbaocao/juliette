@@ -2,7 +2,8 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Analytics - Teacher Dashboard',
+  title: 'Analytics',
+  description: 'Deep dive into student engagement. View question mode distribution, weekly trends, popular interest tags, and most engaged videos.',
 };
 
 async function getAnalytics() {
