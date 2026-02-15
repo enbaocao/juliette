@@ -3,7 +3,8 @@
     "allow": [
       "Bash(cd:*)",
       "Bash(npm install:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

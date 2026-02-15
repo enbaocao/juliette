@@ -1,14 +1,8 @@
-// import { createServerClient } from '@supabase/ssr';
-// import type { CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
+import type { CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function updateSession(request: NextRequest) {
-  // AUTH DISABLED - skip session refresh and route protection
-  return NextResponse.next({
-    request: { headers: request.headers },
-  });
-
-  /* AUTH ENABLED:
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
@@ -44,5 +38,4 @@ export async function updateSession(request: NextRequest) {
   }
 
   return response;
-  */
 }

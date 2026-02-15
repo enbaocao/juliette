@@ -2,6 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Suspense } from 'react';
 import AuthForm from '@/components/auth/AuthForm';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: "Welcome",
@@ -9,20 +11,23 @@ export const metadata = {
     "Juliette is your AI educational assistant. Upload videos, ask questions, and get personalized explanations, practice problems, and animated visualizations.",
 };
 
-export default function Home() {
-  // AUTH DISABLED
-  // let user: { email?: string } | null = null;
-  // try {
-  //   const supabase = await createClient();
-  //   const { data } = await supabase.auth.getUser();
-  //   user = data.user;
-  // } catch {
-  //   // Auth failed - show logged-out state
-  // }
+export default async function Home({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
+  const { next, error } = await searchParams;
+
+  // If user is already logged in, redirect to upload page
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    if (data.user) {
+      redirect(next ?? '/upload');
+    }
+  } catch {
+    // Auth failed - show logged-out state
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAFC] flex flex-col lg:flex-row text-[#1a1a1a]">
-      {/* Header - simple when auth disabled */}
+      {/* Header */}
       <header className="fixed top-8 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 lg:px-14 md:top-10">
         <Link href="/" className="flex items-center hover:opacity-90 transition-opacity gap-0">
           <Image src="/logo.png" alt="Juliette" width={56} height={56} className="flex-shrink-0" />
@@ -45,20 +50,15 @@ export default function Home() {
             Welcome, Romeo
           </h1>
 
-          {/* Auth form - buttons visible but non-functional when auth disabled */}
           <div className="bg-[#FAFAFC] p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
             <Suspense fallback={<div className="py-4 text-center text-gray-500">Loading…</div>}>
-              <AuthForm disabled />
+              <AuthForm />
             </Suspense>
-          </div>
-
-          <div className="mt-12 flex justify-center">
-            <Link
-              href="/upload"
-              className="py-3 px-8 bg-white border border-gray-200 hover:border-[#ffc2d1] text-gray-800 text-center font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
-            >
-              📹 Upload Video
-            </Link>
+            {error === 'auth' && (
+              <p className="text-sm text-red-600 mt-3 text-center">
+                Authentication failed. Please try again.
+              </p>
+            )}
           </div>
         </div>
       </div>
