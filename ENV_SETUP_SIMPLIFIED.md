@@ -47,6 +47,9 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 # OpenAI (same as above)
 OPENAI_API_KEY=sk-your_key
 
+# Demo User ID (for testing without auth)
+DEMO_USER_ID=demo-user-123
+
 # Service Config
 PORT=4000
 NODE_ENV=development

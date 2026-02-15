@@ -331,30 +331,38 @@ export default function HostControls({
         {/* Video Selection */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Link to Lecture Video (optional)
+            Lecture Content Source
           </label>
           {videos.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">
-              No transcribed videos available. Upload videos first.
-            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                🎥 <strong>Screen Recording Mode</strong>
+              </p>
+              <p className="text-xs text-gray-700 mt-1">
+                Students will be able to record the Zoom window during the session
+              </p>
+            </div>
           ) : (
-            <select
-              value={selectedVideoId}
-              onChange={(e) => setSelectedVideoId(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent transition-all"
-            >
-              <option value="">No video (Q&A only)</option>
-              {videos.map((video) => (
-                <option key={video.id} value={video.id}>
-                  {video.title}
-                </option>
-              ))}
-            </select>
+            <>
+              <select
+                value={selectedVideoId}
+                onChange={(e) => setSelectedVideoId(e.target.value)}
+                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent transition-all"
+              >
+                <option value="">🎥 Students will record (Recommended)</option>
+                {videos.map((video) => (
+                  <option key={video.id} value={video.id}>
+                    📹 {video.title}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-2">
+                {selectedVideoId
+                  ? "Using existing video. Students can ask questions immediately."
+                  : "Students will record the Zoom window and ask questions after transcription."}
+              </p>
+            </>
           )}
-          <p className="text-xs text-gray-500 mt-1">
-            Linking a video allows AI to reference lecture content when
-            answering
-          </p>
         </div>
 
         {error && (

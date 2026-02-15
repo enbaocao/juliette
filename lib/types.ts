@@ -53,11 +53,6 @@ export interface LiveSession {
   started_at: string;
   ended_at?: string;
   status: 'active' | 'ended';
-  rtms_stream_id?: string;
-  rtms_status?: 'idle' | 'connecting' | 'streaming' | 'error';
-  is_transcribing?: boolean;
-  transcription_started_at?: string;
-  last_transcript_at?: string;
   created_at: string;
 }
 
@@ -77,20 +72,4 @@ export interface Job {
   error?: string;
   created_at: string;
   updated_at: string;
-}
-
-export interface RTMSConnection {
-  id: string;
-  live_session_id: string;
-  meeting_uuid: string;
-  rtms_stream_id: string;
-  status: 'active' | 'disconnected' | 'error';
-  audio_buffer_size?: number;
-  total_audio_received?: string;
-  total_chunks_processed?: number;
-  last_audio_at?: string;
-  connected_at: string;
-  disconnected_at?: string;
-  error_message?: string;
-  created_at: string;
 }

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { ZoomMeetingContext } from "@/hooks/useZoomApp";
-import { LiveSession, Question } from "@/lib/types";
+import { LiveSession, Question, Video } from "@/lib/types";
 import ManimVideoTab from "./ManimVideoTab";
+import ScreenRecorder from "./ScreenRecorder";
 
 interface StudentViewProps {
   context: ZoomMeetingContext;
@@ -22,6 +23,36 @@ export default function StudentView({ context, session }: StudentViewProps) {
   const [isAsking, setIsAsking] = useState(false);
   const [recentQuestions, setRecentQuestions] = useState<Question[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [video, setVideo] = useState<Video | null>(null);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+
+  // Load video data if session has video_id
+  useEffect(() => {
+    if (!session?.video_id) {
+      setVideo(null);
+      return;
+    }
+
+    const loadVideo = async () => {
+      setIsLoadingVideo(true);
+      try {
+        const response = await fetch(`/api/videos/${session.video_id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setVideo(data.video);
+        }
+      } catch (err) {
+        console.error("Error loading video:", err);
+      } finally {
+        setIsLoadingVideo(false);
+      }
+    };
+
+    loadVideo();
+    // Poll for video status updates
+    const interval = setInterval(loadVideo, 5000);
+    return () => clearInterval(interval);
+  }, [session?.video_id]);
 
   // Poll for recent questions
   useEffect(() => {
@@ -45,6 +76,11 @@ export default function StudentView({ context, session }: StudentViewProps) {
     const interval = setInterval(loadQuestions, 5000); // Poll every 5 seconds
     return () => clearInterval(interval);
   }, [session]);
+
+  const handleRecordingComplete = (videoId: string) => {
+    // Video is now linked to session, polling will pick it up
+    console.log("Recording complete, video_id:", videoId);
+  };
 
   const handleAskQuestion = async () => {
     if (!question.trim() || !session) return;
@@ -88,39 +124,108 @@ export default function StudentView({ context, session }: StudentViewProps) {
     }
   };
 
+  // Show recording interface if no video linked yet
+  if (session && !session.video_id) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="bg-[#ffe5ec] border-b border-[#ffc2d1] p-3">
+          <p className="text-sm font-medium text-[#1a1a1a]">
+            🟢 Live Session Active
+          </p>
+          {session?.title && (
+            <p className="text-xs text-gray-700 mt-1">{session.title}</p>
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          <ScreenRecorder
+            sessionId={session.id}
+            onRecordingComplete={handleRecordingComplete}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Show processing state if video is being transcribed
+  if (session?.video_id && video && video.status !== "transcribed") {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="bg-[#ffe5ec] border-b border-[#ffc2d1] p-3">
+          <p className="text-sm font-medium text-[#1a1a1a]">
+            🟢 Live Session Active
+          </p>
+          {session?.title && (
+            <p className="text-xs text-gray-700 mt-1">{session.title}</p>
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Processing Your Recording
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              We're transcribing your lecture recording. This usually takes 1-2
+              minutes for every 10 minutes of content.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-xs text-blue-800 font-medium">
+                Status: {video.status}
+              </p>
+              <p className="text-xs text-gray-600 mt-2">
+                You'll be able to ask questions as soon as transcription is
+                complete!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Session Info */}
       <div className="bg-[#ffe5ec] border-b border-[#ffc2d1] p-3">
-        <p className="text-sm font-medium text-[#1a1a1a]">🟢 Live Session Active</p>
-        {session?.title && <p className="text-xs text-gray-700 mt-1">{session.title}</p>}
+        <p className="text-sm font-medium text-[#1a1a1a]">
+          🟢 Live Session Active
+        </p>
+        {session?.title && (
+          <p className="text-xs text-gray-700 mt-1">{session.title}</p>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="bg-white border-b border-gray-200">
         <div className="flex">
           <button
-            onClick={() => setActiveTab('questions')}
+            onClick={() => setActiveTab("questions")}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'questions' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-900'
+              activeTab === "questions"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
             💬 Q&A
           </button>
 
           <button
-            onClick={() => setActiveTab('manim')}
+            onClick={() => setActiveTab("manim")}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'manim' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-600 hover:text-gray-900'
+              activeTab === "manim"
+                ? "border-purple-600 text-purple-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
             🎬 Animations
           </button>
 
           <button
-            onClick={() => setActiveTab('personalized')}
+            onClick={() => setActiveTab("personalized")}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'personalized' ? 'border-green-600 text-green-600' : 'border-transparent text-gray-600 hover:text-gray-900'
+              activeTab === "personalized"
+                ? "border-green-600 text-green-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
             ✨ Personalized
@@ -144,50 +249,6 @@ export default function StudentView({ context, session }: StudentViewProps) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none mb-3"
                 rows={3}
               />
-
-              <div className="mb-3">
-                <label className="block text-xs font-medium text-gray-700 mb-2">
-                  Response Type
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => setMode('simple')}
-                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'simple' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                      }`}
-                  >
-                    Simple
-                  </button>
-                  <button
-                    onClick={() => setMode('practice')}
-                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'practice' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                      }`}
-                  >
-                    Practice
-                  </button>
-                  <button
-                    onClick={() => setMode('animation')}
-                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'animation' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                      }`}
-                  >
-                    Animation
-                  </button>
-                </div>
-              </div>
-
-              {mode === "practice" && (
-                <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Interests (comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={interestTags}
-                    onChange={(e) => setInterestTags(e.target.value)}
-                    placeholder="e.g., sports, music, cooking"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              )}
 
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
@@ -226,8 +287,13 @@ export default function StudentView({ context, session }: StudentViewProps) {
                           Q: {q.question}
                         </p>
                         <span
-                          className={`ml-2 px-2 py-0.5 text-xs rounded-full ${q.mode === 'simple' ? 'bg-blue-100 text-blue-800' : q.mode === 'practice' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
-                            }`}
+                          className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
+                            q.mode === "simple"
+                              ? "bg-blue-100 text-blue-800"
+                              : q.mode === "practice"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-green-100 text-green-800"
+                          }`}
                         >
                           {q.mode}
                         </span>
