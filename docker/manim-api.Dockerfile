@@ -50,8 +50,13 @@ RUN echo "=== Files to compile ===" && ls -la docker/ lib/ utils/
 # Build TypeScript to JavaScript using the custom config
 RUN npx tsc --project tsconfig.docker.json --listFiles
 
+# Resolve TypeScript path aliases (@/* -> relative paths)
+# This transforms the compiled JS to use relative imports instead of @/ aliases
+RUN npx tsc-alias -p tsconfig.docker.json
+
 # Debug: Verify compilation output
 RUN echo "=== Compilation Output ===" && ls -la dist/ && find dist/ -type f
+RUN echo "=== Checking resolved imports ===" && head -20 dist/utils/manim-generator.js
 
 # Stage 2: Production image with Manim + Node.js
 FROM manimcommunity/manim:stable
