@@ -6,8 +6,8 @@ export default function Home() {
     <div className="min-h-screen bg-[#FAFAFC] flex flex-col lg:flex-row text-[#1a1a1a]">
       {/* Left Column: Content */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 md:p-16 lg:p-24 pt-16 md:pt-24 lg:pt-32">
-        <div className="max-w-md w-full">
-          <h1 className="text-5xl md:text-6xl mb-12 text-center text-[#1a1a1a] font-[Palatino,'Palatino_Linotype','Book_Antiqua',serif] tracking-tight">
+        <div className="max-w-lg w-full">
+          <h1 className="text-5xl md:text-6xl mb-12 text-center text-[#1a1a1a] font-['Souvenir',sans-serif] font-normal tracking-tight">
             Welcome, Romeo
           </h1>
 
