@@ -94,7 +94,7 @@ export default function SimpleStudentView({ context }: SimpleStudentViewProps) {
               Processing Your Recording
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              We're transcribing your lecture recording. This usually takes 1-2
+              We&apos;re transcribing your lecture recording. This usually takes 1-2
               minutes for every 10 minutes of content.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 inline-block">
@@ -102,7 +102,7 @@ export default function SimpleStudentView({ context }: SimpleStudentViewProps) {
                 Status: {video.status}
               </p>
               <p className="text-xs text-gray-600 mt-2">
-                You'll be able to ask questions as soon as transcription is
+                You&apos;ll be able to ask questions as soon as transcription is
                 complete!
               </p>
             </div>
@@ -138,7 +138,7 @@ export default function SimpleStudentView({ context }: SimpleStudentViewProps) {
                 Recording Transcribed Successfully!
               </h3>
               <p className="text-xs text-green-700">
-                Your lecture recording is ready. Choose how you'd like to learn:
+                Your lecture recording is ready. Choose how you&apos;d like to learn:
               </p>
             </div>
           </div>
