@@ -91,7 +91,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
       {/* Session Info */}
       <div className="bg-[#ffe5ec] border-b border-[#ffc2d1] p-3">
         <p className="text-sm font-medium text-[#1a1a1a]">🟢 Live Session Active</p>
-        {session.title && <p className="text-xs text-gray-700 mt-1">{session.title}</p>}
+        {session?.title && <p className="text-xs text-gray-700 mt-1">{session.title}</p>}
       </div>
 
       {/* Tabs */}
