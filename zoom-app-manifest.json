@@ -1,0 +1,25 @@
+{
+  "name": "Juliette AI Assistant",
+  "version": "1.0.0",
+  "description": "AI-powered educational assistant for live Zoom classes",
+  "short_description": "Ask questions during class and get instant AI explanations",
+  "developer_name": "Juliette Team",
+  "developer_website": "https://yourwebsite.com",
+  "developer_email": "support@yourwebsite.com",
+  "home_url": "https://yourwebsite.com",
+  "redirect_url_allowlist": [
+    "http://localhost:3001/zoom/auth",
+    "https://yourproductiondomain.com/zoom/auth"
+  ],
+  "zoom_app_config": {
+    "in_meeting_panel": {
+      "config_url": "http://localhost:3001/zoom/panel",
+      "can_render_for_all_users": true
+    }
+  },
+  "scopes": [
+    "zoomApp:inMeeting",
+    "zoomApp:getMeetingContext",
+    "zoomApp:getRunningContext"
+  ]
+}

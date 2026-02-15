@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { openai } from '@/lib/openai';
-import { retrieveRelevantChunks } from '@/utils/retrieval';
+import { retrieveRelevantChunks, retrieveRelevantChunksEnhanced } from '@/utils/retrieval';
 import {
   buildSimpleModePrompt,
   buildPracticeModePrompt,
@@ -11,11 +11,16 @@ import {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { videoId, question, mode, interestTags } = body;
+    const { video_id, question, mode, interest_tags, live_session_id, is_live } = body;
 
-    if (!videoId || !question || !mode) {
+    // Support both camelCase (old) and snake_case (new) for backwards compatibility
+    const videoId = video_id;
+    const interestTags = interest_tags;
+    const liveSessionId = live_session_id;
+
+    if (!question || !mode) {
       return NextResponse.json(
-        { error: 'videoId, question, and mode are required' },
+        { error: 'question and mode are required' },
         { status: 400 }
       );
     }
@@ -31,14 +36,26 @@ export async function POST(request: NextRequest) {
     const userId = process.env.DEMO_USER_ID || 'demo-user-' + Date.now();
 
     // Retrieve relevant transcript chunks
-    const chunks = await retrieveRelevantChunks(videoId, question, 5);
+    // For live sessions, prioritize real-time chunks
+    let chunks = [];
+    if (liveSessionId || videoId) {
+      chunks = await retrieveRelevantChunksEnhanced(question, {
+        videoId: videoId,
+        liveSessionId: liveSessionId,
+        topK: 5
+      });
+    }
 
-    if (chunks.length === 0) {
+    // For non-live sessions without video chunks, return error
+    if (chunks.length === 0 && videoId && !is_live) {
       return NextResponse.json(
         { error: 'No transcript found for this video. Please wait for transcription to complete.' },
         { status: 404 }
       );
     }
+
+    // For live sessions without chunks yet, continue with empty context
+    // (AI can still answer general questions)
 
     // Build prompt based on mode
     let prompt;
@@ -107,12 +124,14 @@ export async function POST(request: NextRequest) {
     const { data: savedQuestion, error: dbError } = await supabaseAdmin
       .from('questions')
       .insert({
-        video_id: videoId,
+        video_id: videoId || null,
         user_id: userId,
         question,
         mode,
         interest_tags: interestTags || [],
         answer,
+        live_session_id: liveSessionId || null,
+        is_live: is_live || false,
       })
       .select()
       .single();
@@ -125,6 +144,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       answer,
+      question: savedQuestion,
       questionId: savedQuestion?.id,
     });
   } catch (error) {
