@@ -17,6 +17,7 @@ export default function ScreenRecorder({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [preferSystemAudio, setPreferSystemAudio] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -42,29 +43,12 @@ export default function ScreenRecorder({
       chunksRef.current = [];
 
       // Audio-only recording for Vercel-friendly transfers.
-      // We try to include system audio when possible, but always fall back to mic.
+      // Default to mic (most reliable). Optionally, user can opt into attempting system audio.
       let stream: MediaStream | null = null;
       let gotSystemAudio = false;
 
+      // 1) Mic first (best chance of success and the least confusing permission prompt)
       try {
-        // In some environments, getDisplayMedia(audio:true) captures system audio.
-        const displayStream = await navigator.mediaDevices.getDisplayMedia({
-          video: false,
-          audio: true,
-        } as any);
-        const hasAudio = displayStream.getAudioTracks().length > 0;
-        if (hasAudio) {
-          stream = displayStream;
-          gotSystemAudio = true;
-        } else {
-          displayStream.getTracks().forEach((t) => t.stop());
-        }
-      } catch {
-        // Ignore: user might deny screen-share or Zoom might not allow it.
-      }
-
-      if (!stream) {
-        // Mic-only fallback (works more reliably across browsers)
         stream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: true,
@@ -73,6 +57,39 @@ export default function ScreenRecorder({
           },
           video: false,
         });
+      } catch (micErr) {
+        console.error("Mic permission error:", micErr);
+        // If mic fails, we still allow user to try system audio below if they opted in.
+      }
+
+      // 2) Optional: attempt system audio (often restricted in embedded/webview contexts)
+      if ((!stream || stream.getAudioTracks().length === 0) && preferSystemAudio) {
+        try {
+          const displayStream = await navigator.mediaDevices.getDisplayMedia({
+            video: false,
+            audio: true,
+          } as any);
+
+          const hasAudio = displayStream.getAudioTracks().length > 0;
+          if (hasAudio) {
+            // If we already have a mic stream, stop it and use system audio stream.
+            if (stream) {
+              stream.getTracks().forEach((t) => t.stop());
+            }
+            stream = displayStream;
+            gotSystemAudio = true;
+          } else {
+            displayStream.getTracks().forEach((t) => t.stop());
+          }
+        } catch (sysErr) {
+          console.warn("System audio capture failed:", sysErr);
+        }
+      }
+
+      if (!stream || stream.getAudioTracks().length === 0) {
+        throw new Error(
+          "Couldn’t access audio. Please allow microphone access in macOS Privacy & Security → Microphone (and in Zoom), then try again.",
+        );
       }
 
       streamRef.current = stream;
@@ -245,6 +262,18 @@ export default function ScreenRecorder({
           : "Record audio to ask AI-powered questions."}
       </p>
 
+      {!isRecording && !isProcessing && (
+        <label className="flex items-center gap-2 text-xs text-gray-600 mb-4 select-none">
+          <input
+            type="checkbox"
+            checked={preferSystemAudio}
+            onChange={(e) => setPreferSystemAudio(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Try system audio (may not work in Zoom panel; mic is default)
+        </label>
+      )}
+
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 max-w-md">
           <p className="text-xs text-red-700">{error}</p>
@@ -282,7 +311,7 @@ export default function ScreenRecorder({
 
       {!isRecording && !isProcessing && (
         <p className="text-xs text-gray-500 mt-4 text-center max-w-sm">
-          You may be asked for microphone permission. If screen-sharing audio is available, it will be used; otherwise well use your mic.
+          You’ll be asked for microphone permission. If you still get blocked, enable mic access for Zoom in macOS Privacy & Security → Microphone.
         </p>
       )}
     </div>
