@@ -26,10 +26,10 @@ export default function StudentView({ context, session }: StudentViewProps) {
   const [video, setVideo] = useState<Video | null>(null);
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
 
-  // Reset confirmation when the meeting changes
+  // If the user switches sessions in the panel, reset confirmation.
   useEffect(() => {
     setHasConfirmed(false);
-  }, [context.meetingNumber]);
+  }, [session?.id]);
 
   // Load video data if session has video_id
   useEffect(() => {
@@ -82,8 +82,6 @@ export default function StudentView({ context, session }: StudentViewProps) {
     return () => clearInterval(interval);
   }, [session]);
 
-  const meetingNumberKey = (context.meetingNumber || "").replace(/\D/g, "");
-
   const handleAskQuestion = async () => {
     if (!question.trim() || !session) return;
 
@@ -134,7 +132,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <h1 className="text-xl font-['Souvenir',sans-serif] font-medium text-[#1a1a1a]">
             Juliette
           </h1>
-          <p className="text-sm text-gray-600 mt-1">� Student View</p>
+          <p className="text-sm text-gray-600 mt-1">📚 Student View</p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center">
@@ -146,45 +144,17 @@ export default function StudentView({ context, session }: StudentViewProps) {
                   Connect to your class session
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  We found your Zoom meeting ID. Confirm it matches your teacher’s session.
+                  Pick a live session in the panel to start asking questions.
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-gray-100 bg-[#FAFAFC] p-4">
-              <div className="text-xs text-gray-500">Meeting ID</div>
-              <div className="mt-1 font-mono text-lg text-gray-900">
-                {meetingNumberKey || "—"}
-              </div>
-              {!meetingNumberKey ? (
-                <p className="mt-2 text-xs text-red-600">
-                  Couldn&apos;t read meeting ID from Zoom. Try reopening the panel.
-                </p>
-              ) : null}
+            <div className="mt-4 rounded-xl border border-gray-200 bg-[#FAFAFC] px-4 py-3">
+              <p className="text-sm text-gray-800 font-medium">No session selected</p>
+              <p className="text-xs text-gray-600 mt-1">
+                If you don&apos;t see your teacher&apos;s session, ask them to start one on the website.
+              </p>
             </div>
-
-            {!hasConfirmed ? (
-              <button
-                type="button"
-                onClick={() => setHasConfirmed(true)}
-                disabled={!meetingNumberKey}
-                className="mt-4 w-full px-4 py-2 bg-[#ffc8dd] hover:bg-[#ffbcd5] disabled:opacity-50 disabled:cursor-not-allowed text-[#1a1a1a] font-medium rounded-lg"
-              >
-                Confirm &amp; connect
-              </button>
-            ) : (
-              <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
-                  <p className="text-sm text-blue-900 font-medium">
-                    Waiting for your teacher to start the session…
-                  </p>
-                </div>
-                <p className="text-xs text-blue-800 mt-1">
-                  As soon as the session starts for this meeting ID, you&apos;ll be connected automatically.
-                </p>
-              </div>
-            )}
 
             <div className="mt-4 text-xs text-gray-500">
               This panel never asks for microphone or screen permissions.
@@ -262,7 +232,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
             <div className="mt-4 rounded-xl border border-gray-100 bg-[#FAFAFC] p-4">
               <div className="text-xs text-gray-500">Meeting ID</div>
               <div className="mt-1 font-mono text-lg text-gray-900">
-                {meetingNumberKey || "—"}
+                {session.meeting_number || "—"}
               </div>
             </div>
 

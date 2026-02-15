@@ -20,6 +20,7 @@ export default function HostControls({
   const [videos, setVideos] = useState<Video[]>([]);
   const [selectedVideoId, setSelectedVideoId] = useState<string>("");
   const [sessionTitle, setSessionTitle] = useState("");
+  const [meetingNumber, setMeetingNumber] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +72,13 @@ export default function HostControls({
   }, [session]);
 
   const handleStartSession = async () => {
+    const meetingNumberKey = (meetingNumber || "").replace(/\D/g, "");
+
+    if (!meetingNumberKey) {
+      setError("Please enter the meeting number");
+      return;
+    }
+
     if (!selectedVideoId && !sessionTitle) {
       setError("Please select a video or enter a session title");
       return;
@@ -84,8 +92,9 @@ export default function HostControls({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          meeting_uuid: context.meetingUUID,
-          meeting_number: context.meetingNumber,
+          // Avoid Zoom meeting APIs (can require meeting role). Use manual meeting number entry.
+          meeting_uuid: meetingNumberKey,
+          meeting_number: meetingNumberKey,
           video_id: selectedVideoId || null,
           title: sessionTitle || null,
         }),
@@ -214,7 +223,7 @@ export default function HostControls({
             </p>
           )}
           <p className="text-xs text-gray-500">
-            Meeting: {context.meetingNumber}
+            Meeting: {session.meeting_number}
           </p>
         </div>
 
@@ -313,6 +322,23 @@ export default function HostControls({
         <h2 className="font-semibold text-[#1a1a1a] mb-4">
           Start Live Session
         </h2>
+
+        {/* Meeting Number */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Meeting Number
+          </label>
+          <input
+            type="text"
+            value={meetingNumber}
+            onChange={(e) => setMeetingNumber(e.target.value)}
+            placeholder="123 456 789"
+            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent transition-all"
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            We don’t call Zoom meeting APIs here (they can require special permissions), so enter the meeting number manually.
+          </p>
+        </div>
 
         {/* Session Title */}
         <div className="mb-4">

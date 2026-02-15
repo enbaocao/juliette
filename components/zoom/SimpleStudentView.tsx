@@ -13,6 +13,16 @@ interface SimpleStudentViewProps {
 export default function SimpleStudentView({ context }: SimpleStudentViewProps) {
   const [recordedVideoId, setRecordedVideoId] = useState<string | null>(null);
   const [video, setVideo] = useState<Video | null>(null);
+  const [localSessionId, setLocalSessionId] = useState<string>("zoom-student");
+
+  useEffect(() => {
+    // Generate a stable-ish per-panel session id without using restricted Zoom meeting APIs.
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      setLocalSessionId(`zoom-student-${(crypto as any).randomUUID()}`);
+    } else {
+      setLocalSessionId(`zoom-student-${Date.now()}`);
+    }
+  }, []);
 
   // Load video status after recording
   useEffect(() => {
@@ -61,7 +71,7 @@ export default function SimpleStudentView({ context }: SimpleStudentViewProps) {
 
         <div className="flex-1 overflow-y-auto p-4">
           <ScreenRecorder
-            sessionId={context.meetingUUID} // Use meeting UUID as identifier
+            sessionId={localSessionId}
             onRecordingComplete={handleRecordingComplete}
             linkToSession={false} // Don't link to a live session
           />
