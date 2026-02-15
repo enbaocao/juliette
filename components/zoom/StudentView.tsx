@@ -165,15 +165,15 @@ export default function StudentView({ context, session }: StudentViewProps) {
               Processing Your Recording
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              We're transcribing your lecture recording. This usually takes 1-2
-              minutes for every 10 minutes of content.
+              We&apos;re transcribing your lecture recording. This usually takes
+              1-2 minutes for every 10 minutes of content.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-xs text-blue-800 font-medium">
                 Status: {video.status}
               </p>
               <p className="text-xs text-gray-600 mt-2">
-                You'll be able to ask questions as soon as transcription is
+                You&apos;ll be able to ask questions as soon as transcription is
                 complete!
               </p>
             </div>

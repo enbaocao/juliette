@@ -72,7 +72,7 @@ export default function ScreenRecorder({
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to start recording. Please ensure you grant screen capture permissions."
+          : "Failed to start recording. Please ensure you grant screen capture permissions.",
       );
     }
   };
@@ -105,7 +105,10 @@ export default function ScreenRecorder({
       // Create form data
       const formData = new FormData();
       formData.append("file", blob, `recording-${Date.now()}.webm`);
-      formData.append("title", `Zoom Recording - ${new Date().toLocaleString()}`);
+      formData.append(
+        "title",
+        `Zoom Recording - ${new Date().toLocaleString()}`,
+      );
       formData.append("session_id", sessionId);
 
       // Upload to server
@@ -134,7 +137,7 @@ export default function ScreenRecorder({
     } catch (err) {
       console.error("Error uploading recording:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to upload recording"
+        err instanceof Error ? err.message : "Failed to upload recording",
       );
     } finally {
       setIsProcessing(false);
@@ -171,7 +174,7 @@ export default function ScreenRecorder({
       </h3>
       <p className="text-sm text-gray-600 text-center max-w-md mb-6">
         {isRecording
-          ? "Recording your Zoom window. Stop when you're ready to ask questions!"
+          ? "Recording your Zoom window. Stop when you&apos;re ready to ask questions!"
           : "Record your Zoom meeting window to ask AI-powered questions about the lecture."}
       </p>
 
@@ -205,8 +208,8 @@ export default function ScreenRecorder({
 
       {!isRecording && (
         <p className="text-xs text-gray-500 mt-4 text-center max-w-sm">
-          You'll be prompted to select which window to share. Choose your Zoom
-          meeting window and ensure audio is included.
+          You&apos;ll be prompted to select which window to share. Choose your
+          Zoom meeting window and ensure audio is included.
         </p>
       )}
     </div>
