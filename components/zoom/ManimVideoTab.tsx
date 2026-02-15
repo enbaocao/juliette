@@ -18,13 +18,27 @@ interface GeneratedAnimation {
   usedFallback?: boolean;
 }
 
-export default function ManimVideoTab({ context, session }: ManimVideoTabProps) {
+export type { GeneratedAnimation };
+
+interface ManimVideoTabStateProps {
+  animations: GeneratedAnimation[];
+  selectedAnimation: GeneratedAnimation | null;
+  onAnimationGenerated: (anim: GeneratedAnimation) => void;
+  onSelectAnimation: (anim: GeneratedAnimation | null) => void;
+}
+
+export default function ManimVideoTab({
+  context,
+  session,
+  animations,
+  selectedAnimation,
+  onAnimationGenerated,
+  onSelectAnimation,
+}: ManimVideoTabProps & ManimVideoTabStateProps) {
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState(12);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [generatedAnimations, setGeneratedAnimations] = useState<GeneratedAnimation[]>([]);
-  const [selectedAnimation, setSelectedAnimation] = useState<GeneratedAnimation | null>(null);
 
   // Auto-generation settings
   const [autoEnabled, setAutoEnabled] = useState(true);
@@ -70,7 +84,7 @@ export default function ManimVideoTab({ context, session }: ManimVideoTabProps) 
       setAutoStatus('Generating animation from recent transcript…');
     } else {
       setIsGenerating(true);
-      setSelectedAnimation(null);
+      onSelectAnimation(null);
     }
 
     setError(null);
@@ -106,12 +120,9 @@ export default function ManimVideoTab({ context, session }: ManimVideoTabProps) 
         usedFallback: data.usedFallback,
       };
 
-      setGeneratedAnimations((prev) => [newAnimation, ...prev]);
-      setSelectedAnimation(newAnimation);
+  onAnimationGenerated(newAnimation);
 
-      if (!isAuto) {
-        setPrompt('');
-      }
+      if (!isAuto) setPrompt('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate animation');
     } finally {
@@ -368,7 +379,7 @@ export default function ManimVideoTab({ context, session }: ManimVideoTabProps) 
 
       {/* Generated Animations List */}
       <div className="flex-1 overflow-y-auto p-4">
-        {isGenerating && !selectedAnimation && (
+        {(isGenerating || isAutoGenerating) && !selectedAnimation && (
           <div className="bg-white border border-purple-200 rounded-lg p-6 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-3"></div>
             <p className="text-sm text-gray-700 font-medium mb-1">
@@ -415,16 +426,16 @@ export default function ManimVideoTab({ context, session }: ManimVideoTabProps) 
           </div>
         )}
 
-        {generatedAnimations.length > 0 && !isGenerating && (
+        {animations.length > 0 && !(isGenerating || isAutoGenerating) && (
           <>
             <h4 className="font-semibold text-gray-900 mb-2 text-sm">
-              Previous Animations ({generatedAnimations.length})
+              Previous Animations ({animations.length})
             </h4>
             <div className="space-y-2">
-              {generatedAnimations.slice(1).map((anim) => (
+              {animations.slice(1).map((anim) => (
                 <div
                   key={anim.id}
-                  onClick={() => setSelectedAnimation(anim)}
+                  onClick={() => onSelectAnimation(anim)}
                   className="bg-white border border-gray-200 rounded-lg p-2 cursor-pointer hover:border-purple-400 transition-colors"
                 >
                   <div className="flex items-start gap-2">
@@ -446,7 +457,7 @@ export default function ManimVideoTab({ context, session }: ManimVideoTabProps) 
           </>
         )}
 
-        {generatedAnimations.length === 0 && !isGenerating && (
+        {animations.length === 0 && !(isGenerating || isAutoGenerating) && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎬</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">

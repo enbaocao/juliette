@@ -31,11 +31,18 @@ export default function TeacherAudioRecorder({
   const [durationSec, setDurationSec] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [lastVideoId, setLastVideoId] = useState<string | null>(null);
+  const [chunkEverySec, setChunkEverySec] = useState(60);
+  const [isChunkUploading, setIsChunkUploading] = useState(false);
+  const [lastChunkStatus, setLastChunkStatus] = useState<string | null>(null);
+  const [chunksUploaded, setChunksUploaded] = useState(0);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const chunkTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const isStoppingRef = useRef(false);
+  const isUploadInFlightRef = useRef(false);
 
   const canStart = useMemo(() => {
     return Boolean(meetingKey && meetingNumber && isMeetingKey(meetingKey));
@@ -59,12 +66,90 @@ export default function TeacherAudioRecorder({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = null;
+      if (chunkTimerRef.current) clearInterval(chunkTimerRef.current);
+      chunkTimerRef.current = null;
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
       }
     };
   }, []);
+
+  const flushAndUploadChunk = async ({ isFinal }: { isFinal: boolean }) => {
+    // Guard: we only upload while recording, except for a final flush on stop.
+    if (!recorderRef.current) return;
+    if (isUploadInFlightRef.current) return;
+    if (state !== "recording" && !isFinal) return;
+
+    try {
+      // Ask the recorder to flush buffered audio into ondataavailable.
+      if (recorderRef.current.state === "recording") {
+        try {
+          recorderRef.current.requestData();
+        } catch {
+          // ignore
+        }
+      }
+
+      // Give the browser a moment to deliver the dataavailable event.
+      await new Promise((r) => setTimeout(r, 150));
+
+      if (chunksRef.current.length === 0) {
+        if (isFinal) setLastChunkStatus("No audio captured.");
+        return;
+      }
+
+      isUploadInFlightRef.current = true;
+      setIsChunkUploading(true);
+      setLastChunkStatus(isFinal ? "Uploading final chunk…" : "Uploading chunk…");
+
+      const sid = await ensureSession();
+
+      // Rotate buffer so recording can keep going.
+      const chunksToUpload = chunksRef.current.splice(0, chunksRef.current.length);
+      const blob = new Blob(chunksToUpload, { type: chunksToUpload[0]?.type || "audio/webm" });
+      if (!blob.size) {
+        setLastChunkStatus("Chunk was empty.");
+        return;
+      }
+
+      const file = new File([blob], `teacher-audio-chunk-${Date.now()}.webm`, {
+        type: blob.type || "audio/webm",
+      });
+
+      const form = new FormData();
+      form.append("file", file);
+      form.append("title", title || `Live Session — ${new Date().toLocaleString()}`);
+      form.append("session_id", sid);
+
+      const res = await fetch("/api/transcribe-recording", {
+        method: "POST",
+        body: form,
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || `Transcription failed (${res.status})`);
+      }
+
+      const videoId = data?.videoId as string | undefined;
+      if (videoId) {
+        setLastVideoId(videoId);
+        setChunksUploaded((n) => n + 1);
+        // Keep session.video_id updated to the latest chunk for downstream UI.
+        await fetch("/api/live-sessions/link-video", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: sid, video_id: videoId }),
+        });
+      }
+
+      setLastChunkStatus(isFinal ? "Final chunk uploaded." : "Chunk uploaded.");
+    } finally {
+      setIsChunkUploading(false);
+      isUploadInFlightRef.current = false;
+    }
+  };
 
   const ensureSession = async (): Promise<string> => {
     if (sessionId) return sessionId;
@@ -97,6 +182,9 @@ export default function TeacherAudioRecorder({
     try {
       setError(null);
       setLastVideoId(null);
+      setChunksUploaded(0);
+      setLastChunkStatus(null);
+      isStoppingRef.current = false;
 
       if (!canStart) {
         throw new Error(
@@ -134,7 +222,8 @@ export default function TeacherAudioRecorder({
       };
 
       recorder.onstop = async () => {
-        await transcribeAndAttach();
+        // Final flush when user stops.
+        await flushAndUploadChunk({ isFinal: true });
       };
 
       recorder.start(1000);
@@ -144,6 +233,10 @@ export default function TeacherAudioRecorder({
       timerRef.current = setInterval(() => {
         setDurationSec((s) => s + 1);
       }, 1000);
+
+      chunkTimerRef.current = setInterval(() => {
+        flushAndUploadChunk({ isFinal: false });
+      }, Math.max(15, chunkEverySec) * 1000);
     } catch (e: any) {
       const name = e?.name as string | undefined;
       if (name === "NotAllowedError" || name === "SecurityError") {
@@ -158,12 +251,17 @@ export default function TeacherAudioRecorder({
   };
 
   const stopRecording = () => {
+    isStoppingRef.current = true;
+
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
       recorderRef.current.stop();
     }
 
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
+
+  if (chunkTimerRef.current) clearInterval(chunkTimerRef.current);
+  chunkTimerRef.current = null;
 
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -173,52 +271,10 @@ export default function TeacherAudioRecorder({
     setState("processing");
   };
 
+  // Keep the old API shape but route it to a final flush.
   const transcribeAndAttach = async () => {
     try {
-      setState("processing");
-
-      const sid = await ensureSession();
-      const chunks = chunksRef.current;
-      if (!chunks.length) throw new Error("No audio captured. Try again.");
-
-      const blob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
-      if (!blob.size) throw new Error("Audio is empty. Try again.");
-
-      const file = new File([blob], `teacher-audio-${Date.now()}.webm`, {
-        type: blob.type || "audio/webm",
-      });
-
-      const form = new FormData();
-      form.append("file", file);
-      form.append("title", title || `Live Session — ${new Date().toLocaleString()}`);
-      form.append("session_id", sid);
-
-      // Reuse the existing pipeline: this will create a videos row + transcript chunks.
-      const res = await fetch("/api/transcribe-recording", {
-        method: "POST",
-        body: form,
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.error || `Transcription failed (${res.status})`);
-      }
-
-      const videoId = data?.videoId as string | undefined;
-      if (videoId) {
-        setLastVideoId(videoId);
-        // Link it to the live session so the session has a stable video_id too.
-        await fetch("/api/live-sessions/link-video", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: sid, video_id: videoId }),
-        });
-      }
-
-      setState("idle");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to transcribe");
-      setState("idle");
+      await flushAndUploadChunk({ isFinal: true });
     } finally {
       chunksRef.current = [];
     }
@@ -272,6 +328,43 @@ export default function TeacherAudioRecorder({
         </div>
       ) : null}
 
+      {state === "recording" ? (
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="rounded-xl border border-gray-100 bg-[#FAFAFC] p-4">
+            <div className="text-xs text-gray-500">Chunking</div>
+            <div className="mt-1 text-sm text-gray-900">
+              Upload every <span className="font-mono">{chunkEverySec}s</span>
+              {isChunkUploading ? " • uploading…" : ""}
+            </div>
+            <input
+              type="range"
+              min={15}
+              max={180}
+              step={15}
+              value={chunkEverySec}
+              onChange={(e) => setChunkEverySec(Number(e.target.value))}
+              className="w-full mt-2"
+              disabled={state !== "recording"}
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>15s</span>
+              <span>180s</span>
+            </div>
+          </div>
+          <div className="rounded-xl border border-gray-100 bg-[#FAFAFC] p-4">
+            <div className="text-xs text-gray-500">Progress</div>
+            <div className="mt-1 text-sm text-gray-900">
+              Chunks uploaded: <span className="font-mono">{chunksUploaded}</span>
+            </div>
+            {lastChunkStatus ? (
+              <div className="mt-2 text-xs text-gray-600">{lastChunkStatus}</div>
+            ) : (
+              <div className="mt-2 text-xs text-gray-500">First upload happens automatically.</div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
       <div className="mt-6 flex items-center justify-between gap-4">
         <div className="text-sm text-gray-700">
           {state === "recording" ? (
@@ -297,6 +390,7 @@ export default function TeacherAudioRecorder({
             <button
               type="button"
               onClick={stopRecording}
+              disabled={isChunkUploading}
               className="px-4 py-2 rounded-lg bg-gray-900 hover:bg-black text-white font-medium"
             >
               Stop

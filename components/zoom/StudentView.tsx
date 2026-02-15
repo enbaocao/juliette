@@ -1,9 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ZoomMeetingContext } from "@/hooks/useZoomApp";
 import { LiveSession, Question, Video } from "@/lib/types";
 import ManimVideoTab from "./ManimVideoTab";
+
+type GeneratedAnimation = {
+  id: string;
+  prompt: string;
+  videoUrl: string;
+  duration: number;
+  timestamp: Date;
+  usedFallback?: boolean;
+};
 
 interface StudentViewProps {
   context: ZoomMeetingContext;
@@ -26,9 +35,32 @@ export default function StudentView({ context, session }: StudentViewProps) {
   const [video, setVideo] = useState<Video | null>(null);
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
 
+  // Persist Manim tab state across tab switches
+  const [manimAnimations, setManimAnimations] = useState<GeneratedAnimation[]>([]);
+  const [selectedManim, setSelectedManim] = useState<GeneratedAnimation | null>(null);
+  const [manimHasUnseen, setManimHasUnseen] = useState(false);
+
+  const handleManimGenerated = useCallback(
+    (anim: GeneratedAnimation) => {
+      setManimAnimations((prev) => [anim, ...prev]);
+      setSelectedManim(anim);
+      if (activeTab !== "manim") {
+        setManimHasUnseen(true);
+      }
+    },
+    [activeTab],
+  );
+
+  const handleSelectManim = useCallback((anim: GeneratedAnimation | null) => {
+    setSelectedManim(anim);
+  }, []);
+
   // If the user switches sessions in the panel, reset confirmation.
   useEffect(() => {
     setHasConfirmed(false);
+    setManimAnimations([]);
+    setSelectedManim(null);
+    setManimHasUnseen(false);
   }, [session?.id]);
 
   // Load video data if session has video_id
@@ -288,14 +320,22 @@ export default function StudentView({ context, session }: StudentViewProps) {
           </button>
 
           <button
-            onClick={() => setActiveTab("manim")}
+            onClick={() => {
+              setActiveTab("manim");
+              setManimHasUnseen(false);
+            }}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === "manim"
                 ? "border-[#ffc8dd] text-[#1a1a1a]"
                 : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
-            🎬 Manim
+            <span className="inline-flex items-center gap-2">
+              <span>🎬 Manim</span>
+              {manimHasUnseen ? (
+                <span className="inline-block h-2 w-2 rounded-full bg-[#ff4d6d]" />
+              ) : null}
+            </span>
           </button>
 
           <button
@@ -458,9 +498,20 @@ export default function StudentView({ context, session }: StudentViewProps) {
           </div>
         )}
 
-        {activeTab === "manim" && (
-          <ManimVideoTab context={context} session={session} />
-        )}
+        {/*
+          Keep Manim tab mounted even when hidden, so auto-generation continues and we don't lose the loading state.
+          We just hide it via CSS.
+        */}
+        <div className={activeTab === "manim" ? "block" : "hidden"}>
+          <ManimVideoTab
+            context={context}
+            session={session}
+            animations={manimAnimations}
+            selectedAnimation={selectedManim}
+            onAnimationGenerated={handleManimGenerated}
+            onSelectAnimation={handleSelectManim}
+          />
+        </div>
 
         {activeTab === "personalized" && (
           <PersonalizedTab sessionId={session?.id || null} videoId={session?.video_id || null} />
