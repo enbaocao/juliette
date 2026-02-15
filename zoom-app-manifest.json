@@ -21,5 +21,6 @@
     "zoomApp:inMeeting",
     "zoomApp:getMeetingContext",
     "zoomApp:getRunningContext"
-  ]
+  ],
+  "permissions": ["microphone"]
 }

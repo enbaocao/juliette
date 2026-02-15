@@ -9,15 +9,10 @@
   "home_url": "https://juliette.app",
   "version": "1.0.0",
   "zoom_app_id": "your_zoom_app_id_here",
-  "scopes": [
-    "inMeeting",
-    "onlineMeeting"
-  ],
+  "scopes": ["inMeeting", "onlineMeeting"],
   "apis": {
     "in_meeting": {
-      "supported_features": [
-        "panel"
-      ]
+      "supported_features": ["panel"]
     }
   },
   "modules": {
@@ -32,5 +27,5 @@
       }
     }
   },
-  "permissions": []
+  "permissions": ["microphone"]
 }
