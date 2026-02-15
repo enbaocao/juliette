@@ -1,8 +1,8 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Suspense } from 'react';
 import AuthForm from '@/components/auth/AuthForm';
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: "Welcome",
@@ -13,13 +13,11 @@ export const metadata = {
 export default async function Home({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
   const { next, error } = await searchParams;
 
-  // If user is already logged in, redirect to upload page
+  let user: { email?: string } | null = null;
   try {
     const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
-    if (data.user) {
-      redirect(next ?? '/upload');
-    }
+    user = data.user;
   } catch {
     // Auth failed - show logged-out state
   }
@@ -33,16 +31,28 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
             Welcome, Romeo
           </h1>
 
-          <div className="bg-[#FAFAFC] p-7 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
-            <Suspense fallback={<div className="py-4 text-center text-gray-500">Loading…</div>}>
-              <AuthForm />
-            </Suspense>
-            {error === 'auth' && (
-              <p className="text-sm text-red-600 mt-3 text-center">
-                Authentication failed. Please try again.
-              </p>
-            )}
-          </div>
+          {user ? (
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-gray-600">You&apos;re signed in as {user.email}</p>
+              <Link
+                href="/upload"
+                className="py-3 px-8 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] transition-colors shadow-md"
+              >
+                Go to Upload
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-[#FAFAFC] p-7 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+              <Suspense fallback={<div className="py-4 text-center text-gray-500">Loading…</div>}>
+                <AuthForm />
+              </Suspense>
+              {error === 'auth' && (
+                <p className="text-sm text-red-600 mt-3 text-center">
+                  Authentication failed. Please try again.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
