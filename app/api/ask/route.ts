@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { createClient } from "@/lib/supabase/server";
 import { openai } from "@/lib/openai";
 import {
-  retrieveRelevantChunks,
   retrieveRelevantChunksEnhanced,
 } from "@/utils/retrieval";
 import {
@@ -19,17 +19,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       video_id,
+      videoId,
       question,
       mode,
       interest_tags,
+      interestTags,
       live_session_id,
+      liveSessionId: liveSessionIdCamel,
       is_live,
+      isLive,
     } = body;
 
     // Support both camelCase (old) and snake_case (new) for backwards compatibility
-    const videoId = video_id;
-    const interestTags = interest_tags;
-    const liveSessionId = live_session_id;
+    const resolvedVideoId = video_id ?? videoId;
+    const resolvedInterestTags = interest_tags ?? interestTags;
+    const resolvedLiveSessionId = live_session_id ?? liveSessionIdCamel;
+    const resolvedIsLive = is_live ?? isLive ?? false;
 
     if (!question || !mode) {
       return NextResponse.json(
@@ -45,22 +50,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For MVP, use hardcoded user ID
-    const userId = process.env.DEMO_USER_ID || "demo-user-" + Date.now();
+    // Get user from auth session, fallback to demo for unauthenticated
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id ?? process.env.DEMO_USER_ID ?? "demo-user-" + Date.now();
 
     // Retrieve relevant transcript chunks
     // For live sessions, prioritize real-time chunks
     let chunks: TranscriptChunk[] = [];
-    if (liveSessionId || videoId) {
+    if (resolvedLiveSessionId || resolvedVideoId) {
       chunks = await retrieveRelevantChunksEnhanced(question, {
-        videoId: videoId,
-        liveSessionId: liveSessionId,
+        videoId: resolvedVideoId,
+        liveSessionId: resolvedLiveSessionId,
         topK: 5,
       });
     }
 
     // For non-live sessions without video chunks, return error
-    if (chunks.length === 0 && videoId && !is_live) {
+    if (chunks.length === 0 && resolvedVideoId && !resolvedIsLive) {
       return NextResponse.json(
         {
           error:
@@ -89,7 +96,7 @@ export async function POST(request: NextRequest) {
         prompt = buildSimpleModePrompt(question, chunks);
         break;
       case "practice":
-        prompt = buildPracticeModePrompt(question, chunks, interestTags);
+        prompt = buildPracticeModePrompt(question, chunks, resolvedInterestTags);
         break;
       case "animation":
         prompt = buildAnimationModePrompt(
@@ -165,7 +172,7 @@ export async function POST(request: NextRequest) {
           await supabaseAdmin.from("jobs").insert({
             type: "render",
             payload: {
-              video_id: videoId,
+              video_id: resolvedVideoId,
               template: animationSpec.template,
               params: animationSpec.parameters,
             },
@@ -196,14 +203,14 @@ export async function POST(request: NextRequest) {
     const { data: savedQuestion, error: dbError } = await supabaseAdmin
       .from("questions")
       .insert({
-        video_id: videoId || null,
+        video_id: resolvedVideoId || null,
         user_id: userId,
         question,
         mode,
-        interest_tags: interestTags || [],
+        interest_tags: resolvedInterestTags || [],
         answer,
-        live_session_id: liveSessionId || null,
-        is_live: is_live || false,
+        live_session_id: resolvedLiveSessionId || null,
+        is_live: resolvedIsLive,
       })
       .select()
       .single();

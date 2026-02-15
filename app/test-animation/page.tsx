@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export default function TestAnimationPage() {
   const [context, setContext] = useState('');
@@ -98,12 +100,30 @@ export default function TestAnimationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">🎬 Animation Generator Test</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+    <div className="min-h-screen bg-[#FAFAFC] text-[#1a1a1a]">
+      {/* Header */}
+      {/* <header className="fixed top-8 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 lg:px-14">
+        <Link href="/" className="flex items-center hover:opacity-90 transition-opacity gap-0">
+          <Image src="/logo.png" alt="Juliette" width={56} height={56} className="flex-shrink-0" />
+          <span className="font-['Souvenir',sans-serif] text-3xl font-medium text-[#1a1a1a]">
+            Juliette
+          </span>
+        </Link>
+        <Link
+          href="/"
+          className="py-2 px-4 rounded-lg text-sm font-medium text-[#1a1a1a] border border-gray-200 bg-white/80 hover:bg-white/90 hover:border-[#ffc2d1] transition-colors"
+        >
+          Back to Home
+        </Link>
+      </header> */}
+
+      <div className="max-w-4xl mx-auto px-8 pt-32 pb-16">
+        {/* Page Title */}
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl md:text-5xl mb-4 text-[#1a1a1a] font-['Souvenir',sans-serif] font-normal tracking-tight">
+            🎬 Animation Generator
+          </h1>
+          <p className="text-gray-600">
             Powered by Claude Opus 4.6 + Manim • Generate educational math animations from text
           </p>
         </div>
@@ -111,25 +131,25 @@ export default function TestAnimationPage() {
         {/* Manim Status */}
         {manimStatus && (
           <div
-            className={`mb-6 p-4 rounded-lg border ${manimStatus.ready
-              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-              : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+            className={`mb-6 p-4 rounded-2xl border ${manimStatus.ready
+              ? 'bg-green-50 border-green-200'
+              : 'bg-[#fff8f0] border-[#ffc8dd]'
               }`}
           >
             <div className="flex items-center gap-2">
               {manimStatus.ready ? (
                 <>
-                  <span className="text-green-600 dark:text-green-400">✓</span>
-                  <span className="text-sm text-green-700 dark:text-green-300">
+                  <span className="text-green-600">✓</span>
+                  <span className="text-sm text-green-700">
                     {manimStatus.status}
                   </span>
                 </>
               ) : (
                 <>
-                  <span className="text-yellow-600 dark:text-yellow-400">⚠</span>
-                  <div className="text-sm text-yellow-700 dark:text-yellow-300">
+                  <span className="text-[#e8a87c]">⚠</span>
+                  <div className="text-sm text-[#1a1a1a]">
                     <div>{manimStatus.status}</div>
-                    <div className="text-xs mt-1">{manimStatus.message}</div>
+                    <div className="text-xs mt-1 text-gray-600">{manimStatus.message}</div>
                   </div>
                 </>
               )}
@@ -138,17 +158,17 @@ export default function TestAnimationPage() {
         )}
 
         {/* Example Buttons */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-2">Quick Examples:</label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="mb-8">
+          <label className="block text-sm font-medium mb-3 text-gray-700">Quick Examples:</label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {exampleContexts.map((example) => (
               <button
                 key={example.name}
                 onClick={() => loadExample(example)}
-                className="px-3 py-2 text-sm bg-white dark:bg-gray-800 border rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left"
+                className="px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl hover:border-[#ffc2d1] hover:shadow-md transition-all text-left"
               >
-                <div className="font-medium">{example.name}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{example.duration}s</div>
+                <div className="font-medium text-[#1a1a1a]">{example.name}</div>
+                <div className="text-xs text-gray-500 mt-1">{example.duration}s</div>
               </button>
             ))}
           </div>
@@ -156,9 +176,9 @@ export default function TestAnimationPage() {
 
         {/* Input Form */}
         <form onSubmit={handleSubmit} className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 space-y-4">
+          <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8 space-y-6">
             <div>
-              <label htmlFor="context" className="block text-sm font-medium mb-2">
+              <label htmlFor="context" className="block text-sm font-medium mb-2 text-gray-700">
                 Context / Transcription
               </label>
               <textarea
@@ -167,17 +187,17 @@ export default function TestAnimationPage() {
                 onChange={(e) => setContext(e.target.value)}
                 placeholder="Enter educational content or transcription here..."
                 rows={6}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 resize-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#ffc8dd] focus:border-[#ffc8dd] bg-[#FAFAFC] resize-none transition-all"
                 disabled={loading}
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-2">
                 Max 1000 characters. Be specific about what you want visualized (equations, graphs, shapes, etc.)
               </p>
             </div>
 
             <div>
-              <label htmlFor="duration" className="block text-sm font-medium mb-2">
+              <label htmlFor="duration" className="block text-sm font-medium mb-2 text-gray-700">
                 Target Duration: {duration} seconds
                 <span className="text-xs text-gray-500 ml-2">(Shorter is faster to generate)</span>
               </label>
@@ -189,10 +209,10 @@ export default function TestAnimationPage() {
                 min="8"
                 max="40"
                 step="1"
-                className="w-full"
+                className="w-full accent-[#ffc8dd]"
                 disabled={loading}
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-gray-500 mt-2">
                 <span>8s (Quick)</span>
                 <span>40s (Detailed)</span>
               </div>
@@ -201,7 +221,7 @@ export default function TestAnimationPage() {
             <button
               type="submit"
               disabled={loading || !context.trim()}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+              className="w-full py-3 px-4 bg-[#ffc8dd] hover:bg-[#ffbcd5] disabled:bg-gray-200 disabled:cursor-not-allowed text-[#1a1a1a] font-medium rounded-xl transition-colors shadow-md"
             >
               {loading ? 'Generating Animation...' : 'Generate Animation'}
             </button>
@@ -210,9 +230,9 @@ export default function TestAnimationPage() {
 
         {/* Loading State */}
         {loading && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border p-8 text-center">
+          <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-10 text-center">
             <svg
-              className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4"
+              className="animate-spin h-12 w-12 text-[#ffc8dd] mx-auto mb-4"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -231,7 +251,7 @@ export default function TestAnimationPage() {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
+            <p className="text-[#1a1a1a] mb-2">
               Claude Opus 4.6 is generating animation code...
             </p>
             <p className="text-sm text-gray-500">
@@ -242,46 +262,46 @@ export default function TestAnimationPage() {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+            <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
 
         {/* Success Result */}
         {result && result.success && (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg border p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">✓ Animation Generated!</h2>
+            <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-medium text-[#1a1a1a]">✓ Animation Generated!</h2>
                 {result.usedFallback && (
-                  <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded">
+                  <span className="text-xs bg-[#fff8f0] text-[#e8a87c] px-3 py-1 rounded-full border border-[#ffc8dd]">
                     Fallback Mode
                   </span>
                 )}
               </div>
 
               {/* Video Player */}
-              <div className="mb-4">
+              <div className="mb-6">
                 <video
                   src={result.videoUrl}
                   controls
                   autoPlay
                   loop
-                  className="w-full rounded-lg border"
+                  className="w-full rounded-2xl border border-gray-100"
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <a
                   href={result.videoUrl}
                   download
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
+                  className="px-5 py-2.5 bg-[#ffc8dd] hover:bg-[#ffbcd5] text-[#1a1a1a] font-medium rounded-xl text-sm transition-colors shadow-md"
                 >
                   Download Video
                 </a>
                 <button
                   onClick={() => navigator.clipboard.writeText(result.videoUrl)}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-sm transition-colors"
+                  className="px-5 py-2.5 bg-white border border-gray-200 hover:border-[#ffc2d1] rounded-xl text-sm transition-all"
                 >
                   Copy URL
                 </button>
@@ -289,12 +309,12 @@ export default function TestAnimationPage() {
             </div>
 
             {/* Generated Code */}
-            <details className="bg-white dark:bg-gray-800 rounded-lg border">
-              <summary className="p-4 cursor-pointer font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
+            <details className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
+              <summary className="p-6 cursor-pointer font-medium hover:bg-[#FAFAFC] transition-colors text-[#1a1a1a]">
                 View Generated Manim Code
               </summary>
-              <div className="p-4 border-t">
-                <pre className="text-xs overflow-x-auto bg-gray-900 text-gray-100 p-4 rounded">
+              <div className="p-6 border-t border-gray-100">
+                <pre className="text-xs overflow-x-auto bg-[#1a1a1a] text-gray-100 p-4 rounded-xl">
                   <code>{result.code}</code>
                 </pre>
               </div>

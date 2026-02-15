@@ -201,9 +201,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <button
             onClick={() => setActiveTab("questions")}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "questions"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              activeTab === 'questions' ? 'border-[#ffc8dd] text-[#1a1a1a]' : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             💬 Q&A
@@ -212,43 +210,58 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <button
             onClick={() => setActiveTab("manim")}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "manim"
-                ? "border-purple-600 text-purple-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            🎬 Animations
-          </button>
-
-          <button
-            onClick={() => setActiveTab("personalized")}
-            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === "personalized"
-                ? "border-green-600 text-green-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            ✨ Personalized
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === "questions" && (
-          <div className="p-4">
-            {/* Ask form */}
-            <div className="border-b border-gray-200 p-4 bg-white mb-4">
-              <h3 className="font-semibold text-gray-900 mb-3">
-                Ask a Question
               </h3>
-
               <textarea
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="What would you like to know about this lecture?"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none mb-3"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent resize-none mb-3"
                 rows={3}
               />
+
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  Response Type
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setMode('simple')}
+                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'simple' ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                  >
+                    Simple
+                  </button>
+                  <button
+                    onClick={() => setMode('practice')}
+                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'practice' ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                  >
+                    Practice
+                  </button>
+                  <button
+                    onClick={() => setMode('animation')}
+                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'animation' ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                  >
+                    Animation
+                  </button>
+                </div>
+              </div>
+
+              {mode === "practice" && (
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Interests (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={interestTags}
+                    onChange={(e) => setInterestTags(e.target.value)}
+                    placeholder="e.g., sports, music, cooking"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent"
+                  />
+                </div>
+              )}
 
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
@@ -259,7 +272,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
               <button
                 onClick={handleAskQuestion}
                 disabled={!question.trim() || isAsking}
-                className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isAsking ? "Asking..." : "Ask Question"}
               </button>

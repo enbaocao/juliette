@@ -1,24 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { randomUUID } from 'crypto';
+import { createClient } from '@/lib/supabase/server';
+import { YoutubeTranscript } from 'youtube-transcript';
 
-// YouTube URL validation regex
-const YOUTUBE_URL_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-
-// Demo user ID (MVP hardcoded)
-const DEMO_USER_ID = process.env.DEMO_USER_ID || '00000000-0000-0000-0000-000000000000';
+const CHUNK_DURATION_SECONDS = 60;
+const DEFAULT_DEMO_USER_ID = process.env.DEMO_USER_ID || '00000000-0000-0000-0000-000000000000';
 
 function extractYouTubeVideoId(url: string): string | null {
-  const match = url.match(YOUTUBE_URL_REGEX);
-  return match ? match[4] : null;
+  try {
+    const parsedUrl = new URL(url.startsWith('http') ? url : `https://${url}`);
+    const host = parsedUrl.hostname.replace(/^www\./, '');
+
+    if (host === 'youtu.be') {
+      const id = parsedUrl.pathname.split('/').filter(Boolean)[0];
+      return id && id.length === 11 ? id : null;
+    }
+
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      const pathParts = parsedUrl.pathname.split('/').filter(Boolean);
+      const fromQuery = parsedUrl.searchParams.get('v');
+
+      if (fromQuery && fromQuery.length === 11) return fromQuery;
+      if (pathParts[0] === 'shorts' && pathParts[1]?.length === 11) return pathParts[1];
+      if (pathParts[0] === 'embed' && pathParts[1]?.length === 11) return pathParts[1];
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
 }
 
-function validateYouTubeUrl(url: string): { valid: boolean; error?: string; videoId?: string } {
+function validateYouTubeUrl(url: string): { valid: boolean; error?: string; videoId?: string; canonicalUrl?: string } {
   if (!url || typeof url !== 'string') {
     return { valid: false, error: 'URL is required' };
   }
 
-  const videoId = extractYouTubeVideoId(url);
+  const videoId = extractYouTubeVideoId(url.trim());
   if (!videoId) {
     return {
       valid: false,
@@ -26,7 +45,48 @@ function validateYouTubeUrl(url: string): { valid: boolean; error?: string; vide
     };
   }
 
-  return { valid: true, videoId };
+  return { valid: true, videoId, canonicalUrl: `https://www.youtube.com/watch?v=${videoId}` };
+}
+
+function chunkTranscript(
+  segments: Array<{ text: string; start: number; duration: number }>,
+  chunkDurationSeconds: number = CHUNK_DURATION_SECONDS
+): Array<{ start_sec: number; end_sec: number; text: string }> {
+  const chunks: Array<{ start_sec: number; end_sec: number; text: string }> = [];
+  let currentChunk = {
+    start_sec: 0,
+    end_sec: 0,
+    text: '',
+  };
+
+  for (const segment of segments) {
+    const segmentText = segment.text.trim();
+    if (!segmentText) continue;
+
+    const segmentStart = Number(segment.start);
+    const segmentEnd = Number(segment.start) + Number(segment.duration || 0);
+
+    if (currentChunk.text && segmentEnd - currentChunk.start_sec > chunkDurationSeconds) {
+      chunks.push({ ...currentChunk });
+      currentChunk = {
+        start_sec: segmentStart,
+        end_sec: segmentEnd,
+        text: segmentText,
+      };
+    } else {
+      if (!currentChunk.text) {
+        currentChunk.start_sec = segmentStart;
+      }
+      currentChunk.end_sec = segmentEnd;
+      currentChunk.text += (currentChunk.text ? ' ' : '') + segmentText;
+    }
+  }
+
+  if (currentChunk.text) {
+    chunks.push(currentChunk);
+  }
+
+  return chunks;
 }
 
 export async function POST(request: NextRequest) {
@@ -43,12 +103,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id ?? DEFAULT_DEMO_USER_ID;
+    const canonicalUrl = validation.canonicalUrl!;
+
     // Check if this YouTube video was already added
     const { data: existingVideos, error: checkError } = await supabaseAdmin
       .from('videos')
       .select('id, status, title')
-      .eq('youtube_url', youtube_url)
-      .eq('user_id', DEMO_USER_ID);
+      .eq('youtube_url', canonicalUrl)
+      .eq('user_id', userId);
 
     if (checkError) {
       console.error('Error checking existing videos:', checkError);
@@ -77,11 +142,11 @@ export async function POST(request: NextRequest) {
       .from('videos')
       .insert({
         id: videoId,
-        user_id: DEMO_USER_ID,
+        user_id: userId,
         title: `YouTube Video (${validation.videoId})`, // Temporary title from video ID
-        storage_path: '', // No storage needed - transcript fetched directly from YouTube
+        storage_path: null, // No storage needed - transcript fetched directly from YouTube
         status: 'downloading',
-        youtube_url: youtube_url,
+        youtube_url: canonicalUrl,
         source: 'youtube',
       });
 
@@ -93,40 +158,118 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create download job
-    const { error: jobError } = await supabaseAdmin
-      .from('jobs')
-      .insert({
-        type: 'download',
-        payload: {
-          video_id: videoId,
-          youtube_url: youtube_url,
-          user_id: DEMO_USER_ID,
-        },
-        status: 'pending',
-      });
+    try {
+      const transcript = await YoutubeTranscript.fetchTranscript(canonicalUrl);
 
-    if (jobError) {
-      console.error('Error creating download job:', jobError);
+      if (!transcript || transcript.length === 0) {
+        throw new Error('No transcript available for this video.');
+      }
 
-      // Clean up video record if job creation failed
-      await supabaseAdmin
+      const chunks = chunkTranscript(
+        transcript.map((segment: any) => ({
+          text: segment.text,
+          start: Number(segment.offset ?? 0),
+          duration: Number(segment.duration ?? 0),
+        }))
+      );
+
+      if (chunks.length === 0) {
+        throw new Error('Transcript was fetched but no valid chunks were produced.');
+      }
+
+      const { error: chunksError } = await supabaseAdmin
+        .from('transcript_chunks')
+        .insert(
+          chunks.map((chunk) => ({
+            video_id: videoId,
+            start_sec: chunk.start_sec,
+            end_sec: chunk.end_sec,
+            text: chunk.text,
+          }))
+        );
+
+      if (chunksError) {
+        throw new Error(`Failed to save transcript chunks: ${chunksError.message}`);
+      }
+
+      const { error: statusError } = await supabaseAdmin
         .from('videos')
-        .delete()
+        .update({ status: 'transcribed' })
         .eq('id', videoId);
 
-      return NextResponse.json(
-        { error: 'Failed to create download job' },
-        { status: 500 }
-      );
+      if (statusError) {
+        throw new Error(`Failed to mark video as transcribed: ${statusError.message}`);
+      }
+    } catch (transcriptError) {
+      console.error('Error fetching YouTube transcript:', transcriptError);
+      const rawMessage = transcriptError instanceof Error ? transcriptError.message : 'Unknown transcript error';
+      const normalizedMessage = rawMessage.toLowerCase();
+
+      const isRateLimited = normalizedMessage.includes('too many requests') || normalizedMessage.includes('captcha');
+      const isUnavailable = normalizedMessage.includes('unavailable') || normalizedMessage.includes('private');
+
+      if (isUnavailable) {
+        await supabaseAdmin
+          .from('videos')
+          .delete()
+          .eq('id', videoId);
+
+        return NextResponse.json(
+          {
+            error: 'This YouTube video is unavailable or private.',
+            details: rawMessage,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Fallback: queue full download + Whisper transcription pipeline.
+      const { error: jobError } = await supabaseAdmin
+        .from('jobs')
+        .insert({
+          type: 'download',
+          payload: {
+            video_id: videoId,
+            youtube_url: canonicalUrl,
+            user_id: userId,
+          },
+          status: 'pending',
+        });
+
+      if (jobError) {
+        console.error('Failed to create download fallback job:', jobError);
+        await supabaseAdmin.from('videos').delete().eq('id', videoId);
+
+        return NextResponse.json(
+          {
+            error: 'Could not start fallback transcription pipeline.',
+            details: jobError.message,
+          },
+          { status: 500 }
+        );
+      }
+
+      await supabaseAdmin
+        .from('videos')
+        .update({ status: 'downloading' })
+        .eq('id', videoId);
+
+      return NextResponse.json({
+        video_id: videoId,
+        status: 'downloading',
+        fallback: 'subtitle_fetch_via_ytdlp',
+        message: isRateLimited
+          ? 'YouTube caption API is rate-limited. Started subtitle-file fallback.'
+          : 'No captions found from primary source. Started subtitle-file fallback.',
+      });
     }
 
-    console.log(`✓ Created transcript fetch job for YouTube video: ${youtube_url}`);
+    console.log(`✓ YouTube transcript fetched and stored for: ${canonicalUrl}`);
 
     return NextResponse.json({
       video_id: videoId,
-      status: 'downloading',
-      message: 'Fetching YouTube transcript',
+      status: 'transcribed',
+      message: 'YouTube transcript fetched successfully',
     });
   } catch (error) {
     console.error('Upload YouTube API error:', error);

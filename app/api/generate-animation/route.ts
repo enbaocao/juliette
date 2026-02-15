@@ -7,6 +7,14 @@ const MANIM_API_URL = process.env.MANIM_API_URL;
 const RENDER_API_SECRET = process.env.RENDER_API_SECRET;
 
 export async function POST(request: NextRequest) {
+  // Debug: Log configuration
+  console.log('📋 Animation API Configuration:', {
+    hasManimApiUrl: !!MANIM_API_URL,
+    manimApiUrl: MANIM_API_URL || 'not set',
+    hasApiSecret: !!RENDER_API_SECRET,
+    mode: MANIM_API_URL ? 'proxy to Render' : 'local execution',
+  });
+
   // If MANIM_API_URL is set, proxy to the Render-hosted Manim API service
   if (MANIM_API_URL) {
     try {
@@ -23,6 +31,29 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify(body),
       });
 
+      // Check content type before parsing
+      const contentType = response.headers.get('content-type');
+
+      if (!contentType || !contentType.includes('application/json')) {
+        // Got HTML or other non-JSON response (likely an error page)
+        const text = await response.text();
+        console.error('❌ Non-JSON response from Render:', text.substring(0, 500));
+
+        return NextResponse.json(
+          {
+            error: 'Animation service returned invalid response',
+            message: `Expected JSON but got ${contentType || 'unknown content type'}`,
+            details: response.status === 404
+              ? 'Service not found - check MANIM_API_URL is correct'
+              : response.status >= 500
+              ? 'Service error - check Render service logs'
+              : 'Unexpected response from service',
+            statusCode: response.status,
+          },
+          { status: response.status }
+        );
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -38,6 +69,7 @@ export async function POST(request: NextRequest) {
         {
           error: 'Failed to connect to animation service',
           message: error instanceof Error ? error.message : 'Unknown error',
+          hint: 'Check that MANIM_API_URL is correct and service is running',
         },
         { status: 500 }
       );
@@ -73,17 +105,21 @@ export async function POST(request: NextRequest) {
     console.log('📝 Context:', limitedContext.substring(0, 100) + '...');
     console.log('⏱️  Duration:', duration, 'seconds');
 
+    const startTime = Date.now();
+
     // Step 1: Generate Manim code using AI
     let manimCode: string;
     let usedFallback = false;
 
     try {
-      console.log('🤖 Generating Manim code with Claude Opus 4.6...');
+      console.log('🤖 Generating Manim code with Claude Haiku 4.5...');
+      const codeGenStart = Date.now();
       manimCode = await generateManimCode({
         context: limitedContext,
         duration,
       });
-      console.log('✅ Code generated successfully');
+      const codeGenTime = Date.now() - codeGenStart;
+      console.log(`✅ Code generated successfully in ${(codeGenTime / 1000).toFixed(1)}s`);
       console.log('📄 Code preview:', manimCode.substring(0, 300) + '...');
     } catch (error) {
       console.error('❌ Failed to generate code with AI:', error);
@@ -94,11 +130,14 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Execute Manim code to generate video
     console.log('🎥 Rendering animation...');
+    const renderStart = Date.now();
     const outputName = `animation_${Date.now()}`;
-    const result = await executeManimCode(manimCode, outputName, 'medium');
+    const result = await executeManimCode(manimCode, outputName, 'low'); // Use 'low' quality for 3x faster rendering
 
     if (!result.success) {
       console.error('❌ Animation rendering failed');
+      const totalTime = Date.now() - startTime;
+      console.log(`⏱️  Total time: ${(totalTime / 1000).toFixed(1)}s`);
       return NextResponse.json(
         {
           error: result.error || 'Failed to generate animation',
@@ -110,7 +149,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Animation generated successfully!');
+    const renderTime = Date.now() - renderStart;
+    const totalTime = Date.now() - startTime;
+    console.log(`✅ Animation generated successfully!`);
+    console.log(`⏱️  Rendering time: ${(renderTime / 1000).toFixed(1)}s`);
+    console.log(`⏱️  Total time: ${(totalTime / 1000).toFixed(1)}s`);
     console.log('📹 Video URL:', result.videoPath);
 
     // Step 3: Return video URL

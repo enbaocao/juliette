@@ -36,7 +36,7 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
             type="button"
             onClick={() => setMode('simple')}
             className={`p-4 border-2 rounded-lg text-left transition-all ${mode === 'simple'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-[#ffc8dd] bg-[#ffe5ec] dark:bg-pink-900/20'
                 : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
               }`}
           >
@@ -51,7 +51,7 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
             type="button"
             onClick={() => setMode('practice')}
             className={`p-4 border-2 rounded-lg text-left transition-all ${mode === 'practice'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-[#ffc8dd] bg-[#ffe5ec] dark:bg-pink-900/20'
                 : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
               }`}
           >
@@ -66,7 +66,7 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
             type="button"
             onClick={() => setMode('animation')}
             className={`p-4 border-2 rounded-lg text-left transition-all ${mode === 'animation'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-[#ffc8dd] bg-[#ffe5ec] dark:bg-pink-900/20'
                 : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
               }`}
           >
@@ -94,7 +94,7 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
             value={interests}
             onChange={(e) => setInterests(e.target.value)}
             placeholder="Enter topics you're interested in, separated by commas"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800"
             disabled={loading}
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -114,7 +114,7 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="What would you like to know about this video?"
           rows={4}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 resize-none"
+          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800 resize-none"
           disabled={loading}
           required
         />
@@ -124,7 +124,7 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
       <button
         type="submit"
         disabled={!question.trim() || loading}
-        className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+        className="w-full py-3 px-4 bg-[#ffc8dd] hover:bg-[#ffbcd5] disabled:bg-gray-400 disabled:cursor-not-allowed text-[#1a1a1a] font-medium rounded-lg transition-colors"
       >
         {loading ? 'Getting Answer...' : 'Ask Question'}
       </button>

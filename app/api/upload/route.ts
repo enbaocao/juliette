@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
+import { createClient } from '@/lib/supabase/server';
 import { randomUUID } from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id ?? process.env.DEMO_USER_ID ?? 'demo-user-' + Date.now();
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const title = formData.get('title') as string;
@@ -14,10 +19,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // For MVP, we'll use a hardcoded user ID
-    // In production, get this from auth session
-    const userId = process.env.DEMO_USER_ID || 'demo-user-' + Date.now();
 
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
