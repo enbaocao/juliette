@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { ZoomMeetingContext } from "@/hooks/useZoomApp";
 import { LiveSession, Question, Video } from "@/lib/types";
 import ManimVideoTab from "./ManimVideoTab";
-import ScreenRecorder from "./ScreenRecorder";
 
 interface StudentViewProps {
   context: ZoomMeetingContext;
@@ -14,6 +13,7 @@ interface StudentViewProps {
 type TabType = "questions" | "manim" | "personalized";
 
 export default function StudentView({ context, session }: StudentViewProps) {
+  const [hasConfirmed, setHasConfirmed] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("questions");
   const [question, setQuestion] = useState("");
   const [mode, setMode] = useState<"simple" | "practice" | "animation">(
@@ -25,6 +25,11 @@ export default function StudentView({ context, session }: StudentViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [video, setVideo] = useState<Video | null>(null);
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+
+  // Reset confirmation when the meeting changes
+  useEffect(() => {
+    setHasConfirmed(false);
+  }, [context.meetingNumber]);
 
   // Load video data if session has video_id
   useEffect(() => {
@@ -77,10 +82,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
     return () => clearInterval(interval);
   }, [session]);
 
-  const handleRecordingComplete = (videoId: string) => {
-    // Video is now linked to session, polling will pick it up
-    console.log("Recording complete, video_id:", videoId);
-  };
+  const meetingNumberKey = (context.meetingNumber || "").replace(/\D/g, "");
 
   const handleAskQuestion = async () => {
     if (!question.trim() || !session) return;
@@ -124,23 +126,74 @@ export default function StudentView({ context, session }: StudentViewProps) {
     }
   };
 
-  // Show recording interface if no video linked yet
-  if (session && !session.video_id) {
+  // If no active session yet, show a confirmation / waiting screen (no permissions required)
+  if (!session) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="bg-[#ffe5ec] border-b border-[#ffc2d1] p-3">
-          <p className="text-sm font-medium text-[#1a1a1a]">
-            🟢 Live Session Active
-          </p>
-          {session?.title && (
-            <p className="text-xs text-gray-700 mt-1">{session.title}</p>
-          )}
+      <div className="flex flex-col h-full bg-[#FAFAFC]">
+        <div className="bg-white border-b border-gray-100 p-4 shadow-sm">
+          <h1 className="text-xl font-['Souvenir',sans-serif] font-medium text-[#1a1a1a]">
+            Juliette
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">� Student View</p>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <ScreenRecorder
-            sessionId={session.id}
-            onRecordingComplete={handleRecordingComplete}
-          />
+
+        <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div className="flex items-start gap-3">
+              <div className="text-3xl">🔗</div>
+              <div className="flex-1">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Connect to your class session
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  We found your Zoom meeting ID. Confirm it matches your teacher’s session.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-gray-100 bg-[#FAFAFC] p-4">
+              <div className="text-xs text-gray-500">Meeting ID</div>
+              <div className="mt-1 font-mono text-lg text-gray-900">
+                {meetingNumberKey || "—"}
+              </div>
+              {!meetingNumberKey ? (
+                <p className="mt-2 text-xs text-red-600">
+                  Couldn&apos;t read meeting ID from Zoom. Try reopening the panel.
+                </p>
+              ) : null}
+            </div>
+
+            {!hasConfirmed ? (
+              <button
+                type="button"
+                onClick={() => setHasConfirmed(true)}
+                disabled={!meetingNumberKey}
+                className="mt-4 w-full px-4 py-2 bg-[#ffc8dd] hover:bg-[#ffbcd5] disabled:opacity-50 disabled:cursor-not-allowed text-[#1a1a1a] font-medium rounded-lg"
+              >
+                Confirm &amp; connect
+              </button>
+            ) : (
+              <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
+                  <p className="text-sm text-blue-900 font-medium">
+                    Waiting for your teacher to start the session…
+                  </p>
+                </div>
+                <p className="text-xs text-blue-800 mt-1">
+                  As soon as the session starts for this meeting ID, you&apos;ll be connected automatically.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-4 text-xs text-gray-500">
+              This panel never asks for microphone or screen permissions.
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border-t border-gray-100 p-2 text-center">
+          <p className="text-xs text-gray-500">Powered by Juliette AI • {context.userName}</p>
         </div>
       </div>
     );
@@ -178,6 +231,61 @@ export default function StudentView({ context, session }: StudentViewProps) {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If session is active but teacher hasn't linked a transcript/video yet, show waiting state.
+  if (session && !session.video_id) {
+    return (
+      <div className="flex flex-col h-full bg-[#FAFAFC]">
+        <div className="bg-white border-b border-gray-100 p-4 shadow-sm">
+          <h1 className="text-xl font-['Souvenir',sans-serif] font-medium text-[#1a1a1a]">
+            Juliette
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">📚 Student View</p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div className="flex items-start gap-3">
+              <div className="text-3xl">🟢</div>
+              <div className="flex-1">
+                <h2 className="text-lg font-semibold text-gray-900">Live session active</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Your teacher has started the session. We&apos;re waiting for the first transcript to be uploaded.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-gray-100 bg-[#FAFAFC] p-4">
+              <div className="text-xs text-gray-500">Meeting ID</div>
+              <div className="mt-1 font-mono text-lg text-gray-900">
+                {meetingNumberKey || "—"}
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
+                <p className="text-sm text-blue-900 font-medium">
+                  Waiting for transcript…
+                </p>
+              </div>
+              <p className="text-xs text-blue-800 mt-1">
+                Once your teacher stops recording on the website, you&apos;ll be able to ask questions.
+              </p>
+            </div>
+
+            <div className="mt-4 text-xs text-gray-500">
+              No microphone or screen permissions required.
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border-t border-gray-100 p-2 text-center">
+          <p className="text-xs text-gray-500">Powered by Juliette AI • {context.userName}</p>
         </div>
       </div>
     );
