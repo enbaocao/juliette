@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ZoomMeetingContext } from '@/hooks/useZoomApp';
 import { LiveSession } from '@/lib/types';
 import HostControls from './HostControls';
-import StudentView from './StudentView';
+import SimpleStudentView from './SimpleStudentView';
 
 interface LiveSessionPanelProps {
   context: ZoomMeetingContext;
@@ -14,8 +14,13 @@ export default function LiveSessionPanel({ context }: LiveSessionPanelProps) {
   const [session, setSession] = useState<LiveSession | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
 
-  // Check if there's an active session for this meeting
+  // Check if there's an active session for this meeting (only for hosts)
   useEffect(() => {
+    if (context.role !== 'host') {
+      setIsLoadingSession(false);
+      return;
+    }
+
     const checkSession = async () => {
       try {
         const response = await fetch(
@@ -38,7 +43,7 @@ export default function LiveSessionPanel({ context }: LiveSessionPanelProps) {
     // Poll for session updates every 10 seconds
     const interval = setInterval(checkSession, 10000);
     return () => clearInterval(interval);
-  }, [context.meetingUUID]);
+  }, [context.meetingUUID, context.role]);
 
   const handleSessionCreated = (newSession: LiveSession) => {
     setSession(newSession);
@@ -56,31 +61,28 @@ export default function LiveSessionPanel({ context }: LiveSessionPanelProps) {
     );
   }
 
+  // Students get the simple recording interface
+  if (context.role !== 'host') {
+    return <SimpleStudentView context={context} />;
+  }
+
+  // Hosts get the full controls
   return (
     <div className="flex flex-col h-screen bg-[#FAFAFC]">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 p-4 shadow-sm">
         <h1 className="text-xl font-['Souvenir',sans-serif] font-medium text-[#1a1a1a]">Juliette</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          {context.role === 'host' ? '🎓 Teacher View' : '📚 Student View'}
-        </p>
+        <p className="text-sm text-gray-600 mt-1">🎓 Teacher View</p>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        {context.role === 'host' ? (
-          <HostControls
-            context={context}
-            session={session}
-            onSessionCreated={handleSessionCreated}
-            onSessionEnded={handleSessionEnded}
-          />
-        ) : (
-          <StudentView
-            context={context}
-            session={session}
-          />
-        )}
+        <HostControls
+          context={context}
+          session={session}
+          onSessionCreated={handleSessionCreated}
+          onSessionEnded={handleSessionEnded}
+        />
       </div>
 
       {/* Footer */}

@@ -35,6 +35,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
           {user ? (
             <div className="flex flex-col items-center gap-6 w-full">
               <p className="text-gray-500 text-sm">What would you like to do today?</p>
+
+              {/* Student Option - Featured */}
+              <Link
+                href="/student"
+                className="w-full p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl border-2 border-blue-300 shadow-[0_4px_20px_rgb(0,0,0,0.05)] hover:border-blue-400 hover:shadow-[0_4px_20px_rgb(147,197,253,0.3)] transition-all text-center"
+              >
+                <div className="w-14 h-14 mx-auto mb-3 rounded-xl bg-blue-100 flex items-center justify-center">
+                  <span className="text-3xl">🎓</span>
+                </div>
+                <h3 className="font-semibold text-[#1a1a1a] mb-1 text-lg">Join Live Session</h3>
+                <p className="text-sm text-gray-600">Record Zoom lectures & ask AI-powered questions</p>
+              </Link>
+
+              {/* Other Options */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                 <Link
                   href="/upload"
@@ -44,7 +58,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
                     <Upload className="w-6 h-6 text-[#e8a0b4]" />
                   </div>
                   <h3 className="font-semibold text-[#1a1a1a] mb-1">Upload Video</h3>
-                  <p className="text-xs text-gray-500">Add a new video for AI analysis</p>
+                  <p className="text-xs text-gray-500">Add lecture videos</p>
                 </Link>
 
                 <Link
@@ -55,7 +69,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
                     <LayoutDashboard className="w-6 h-6 text-[#e8a0b4]" />
                   </div>
                   <h3 className="font-semibold text-[#1a1a1a] mb-1">Dashboard</h3>
-                  <p className="text-xs text-gray-500">Manage videos & analytics</p>
+                  <p className="text-xs text-gray-500">Teacher analytics</p>
                 </Link>
 
                 <Link
@@ -66,7 +80,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
                     <PlayCircle className="w-6 h-6 text-[#e8a0b4]" />
                   </div>
                   <h3 className="font-semibold text-[#1a1a1a] mb-1">Browse Videos</h3>
-                  <p className="text-xs text-gray-500">Watch and ask questions</p>
+                  <p className="text-xs text-gray-500">Watch recorded lectures</p>
                 </Link>
               </div>
             </div>

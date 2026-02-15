@@ -3,6 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import { createClient } from '@/lib/supabase/server';
 import { randomUUID } from 'crypto';
 
+// Configure route to handle larger uploads
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 seconds timeout
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
