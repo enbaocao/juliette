@@ -1,0 +1,5 @@
+# Manim is already included in the base image
+# Add any additional dependencies here
+
+numpy>=1.21.0
+scipy>=1.7.0

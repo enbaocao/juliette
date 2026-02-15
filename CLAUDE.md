@@ -4,12 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Juliette is an AI-powered educational video assistant built for a hackathon MVP. It ingests educational videos, generates transcripts, and answers student questions with three modes:
+Juliette is an AI-powered educational video assistant with **teacher dashboard** and **Zoom integration** as the primary features. It ingests educational videos, generates transcripts, and answers student questions with three modes:
 1. **Simple explanations** - Short explanation with check questions
 2. **Practice problems** - Personalized problems based on student interest tags
 3. **Animations** - Manim-rendered visualizations using predefined templates
 
-The app also integrates with Zoom for live classroom Q&A.
+**Key Features:**
+- **Teacher Dashboard** (`/teacher`) - Comprehensive dashboard with video library, student questions feed, analytics, and engagement metrics
+- **Zoom Integration** (`/zoom/panel`) - Live Q&A panel that works inside Zoom meetings
+- **Real-time Analytics** - Track student engagement, question trends, and popular topics
+- **Video Upload & Transcription** - Automatic transcription with OpenAI Whisper
+- **AI-Powered Q&A** - Three response modes for different learning styles
 
 ## Tech Stack
 

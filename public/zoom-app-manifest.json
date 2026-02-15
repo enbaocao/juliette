@@ -1,0 +1,36 @@
+{
+  "name": "Juliette AI",
+  "short_description": "AI-powered educational video assistant for live Q&A",
+  "long_description": "Juliette helps students ask questions about educational videos during Zoom meetings. Get instant AI-powered answers with explanations, practice problems, or animated visualizations.",
+  "developer_name": "Juliette Team",
+  "developer_url": "https://juliette.app",
+  "support_url": "https://juliette.app/support",
+  "privacy_policy_url": "https://juliette.app/privacy",
+  "home_url": "https://juliette.app",
+  "version": "1.0.0",
+  "zoom_app_id": "your_zoom_app_id_here",
+  "scopes": [
+    "inMeeting",
+    "onlineMeeting"
+  ],
+  "apis": {
+    "in_meeting": {
+      "supported_features": [
+        "panel"
+      ]
+    }
+  },
+  "modules": {
+    "panel": {
+      "main_view": {
+        "size": {
+          "width": 400,
+          "height": 600
+        },
+        "view_type": "main",
+        "label": "Juliette Q&A"
+      }
+    }
+  },
+  "permissions": []
+}

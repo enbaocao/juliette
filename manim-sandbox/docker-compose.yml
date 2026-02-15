@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  manim:
+    build: .
+    volumes:
+      # Mount current directory to /manim in container
+      - ./:/manim
+      # Output directory for rendered videos
+      - ./output:/manim/media
+    working_dir: /manim
+    # Run commands like: docker-compose run manim manim -pql examples/01_basic_shapes.py
+    entrypoint: []
+    command: bash

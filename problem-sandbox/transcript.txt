@@ -1,0 +1,2964 @@
+transcript
+
+
+- All right, happy Friday CSE 109. Hope you guys are having a great day.
+
+2:45
+
+- Um, we have another another fun lecture today, so let's get started.
+
+2:50
+
+- Today we're going to be learning about this concept, which is called algorithmic analysis.
+
+2:56
+
+- Um, we're going to lay kind of like the foundation in CSE 109.
+
+2:59
+
+- And you guys will build on this in a lot of your, uh, later courses. So definitely, um, a fun lecture.
+
+3:03
+
+- I have three learning goals for you today. The first is I want you guys to be able to compute this thing called conditional expectation.
+
+3:09
+
+- So we know about expectation. Now we're going to talk about expectation conditioned on some random variable.
+
+3:15
+
+- The next one is I want you guys to be able to solve problems using what we call the law of total expectation.
+
+3:19
+
+- We know the law of total probability. Today we're going to learn the law of total expectation.
+
+3:24
+
+- And then lastly we're going to learn I want you guys to learn how to use conditional expectation,
+
+3:27
+
+- uh, to do this thing called algorithm analysis or algorithmic analysis.
+
+3:31
+
+- Um, one major thing to know about today's lecture is after today's lecture, you'll be able to do these last three problems on the problem set.
+
+3:35
+
+- So we release problems at five after class on Wednesday and uh, after class Wednesday, you could do everything except for the last three problems.
+
+3:41
+
+- After today, you guys will be able to do with those last three problems.
+
+3:47
+
+- So these are the two things that we're going to cover in lecture today that we don't know already.
+
+3:50
+
+- There are going to be lots of opportunities to write these down. I also have them on the board.
+
+3:55
+
+- Um, but you guys can come back to these formulas. They'll be kind of at the top of the slide and throughout.
+
+3:59
+
+- Um, but yeah, if you don't have the lecture slides pulled up, you guys can pull these out.
+
+4:02
+
+- Then these will kind of be the formulas that we'll be referring to in lecture today.
+
+4:05
+
+- Okay. Of course that leads us to a little bit of review.
+
+4:11
+
+- So this class is going to build on a bunch of stuff that we've already done in CSE 1 or 9, in regard to kind of going to take it up to the next notch.
+
+4:14
+
+- So recall, uh, this definition of expectation.
+
+4:19
+
+- So when you have a random variable x, you can summarize that whole random variable into one number which is called the expectation.
+
+4:22
+
+- So uh e bracket x the expectation of x is going to give us a number.
+
+4:28
+
+- What we're going to do is we're going to sum over all of the possible values that random variable could take on.
+
+4:31
+
+- We multiply that value by the probability that the random variable takes on that value.
+
+4:35
+
+- Um and this gives us back one number. What this looks like is on the left of the screen.
+
+4:39
+
+- Of course we know if you have the whole random variable, you have the probability mass function or the probability density function.
+
+4:44
+
+- And then you can summarize that by one number. Um, so we would prefer to have the whole random variable.
+
+4:49
+
+- Uh, but sometimes we have this thing called expectation instead. And today we're going to learn there are these useful properties of expectation.
+
+4:54
+
+- Because there are going to be times when you don't have access to the whole random variable. You only have access to the expectation.
+
+4:59
+
+- Some things we learned is the expectation of the sum is the sum of expectations.
+
+5:05
+
+- So hopefully you guys have heard this many times. When you say the expectation of x plus y, that's the expectation of x plus the expectation of y.
+
+5:10
+
+- If we generalize this, if you have the expectation of a sum of many random variables, you can pull that summation outside.
+
+5:19
+
+- Um, so hopefully you guys have gotten a lot of practice with this.
+
+5:24
+
+- The other two amazing properties of expectation that we already know about are the law of the unconscious, law of unconscious statistician.
+
+5:27
+
+- Uh, we'll actually just start with this one. So if you have the expectation of a function of a random variable, um,
+
+5:33
+
+- you can just replace that value little x with the function of little x in that equation.
+
+5:38
+
+- So if we give an example the expectation of a random variable squared you're going to sum over all the values.
+
+5:42
+
+- And then for each value you'll square it. And then you multiply it by its probability.
+
+5:47
+
+- So this makes our life really easy when we can use things like the law of unconscious statistician okay.
+
+5:50
+
+- This is our review for today. So hopefully lots of topics you guys feel, um, familiar with.
+
+5:55
+
+- Okay, before we jump in, um, you guys have all taken the midterm by now.
+
+6:01
+
+- Um, how is the midterm? You guys know how it went, but in terms of, uh, how it went for grades, we won't know that until Wednesday.
+
+6:05
+
+- Um, of course, the midterm is a diagnostic instead of kind of like a summative assessment.
+
+6:11
+
+- So we want it to give you guys information about where you are in case 1 or 9 and
+
+6:16
+
+- kind of what you need to do to get where you want to be by the end of the course.
+
+6:19
+
+- Um, I just want to show you guys a history of midterm. These are the mean midterm scores over the quarters, um, sequence.
+
+6:23
+
+- And then the error bars are standard deviation of the exam. Um, you can see before we release the set up, that's that first green blue line.
+
+6:30
+
+- Um, and then in let's see 2023. Not really when ChatGPT came out, but maybe GPT was able to like solve better problems.
+
+6:36
+
+- Um, and you can see like midterm exam scores, kind of what they look like over the time, um,
+
+6:44
+
+- when our exam is done being graded, you guys can put where like, our mean is on this plot and, uh, see how that looks like.
+
+6:48
+
+- One thing to note is that course grades are independent of midterm difficulty.
+
+6:53
+
+- So what I mean by that is like you're going to get there's going to be some mean score for the midterm.
+
+6:57
+
+- Um, and depending on how that is over the years, the same will give like grades in the course kind of independent of that.
+
+7:01
+
+- So like for example, like let's say uh, one professor gave like a really tough exam.
+
+7:06
+
+- Um, and then of course, like where people fall, that's not going to impact their final course grades.
+
+7:11
+
+- Just because that exam was really difficult. Does that make sense? Questions about that.
+
+7:15
+
+- Cool. Um, okay. We'll talk more about this on Wednesday.
+
+7:20
+
+- Of course, partial credit is a thing. And, uh, you guys, I've taken a look at a lot of exams, and you guys have done a great job, uh,
+
+7:24
+
+- showing a lot of work that, you know, the next thing I want to talk about is my favorite part of CSE one and nine.
+
+7:28
+
+- I have lots of favorite parts, but this might be, uh, one of my truly favorite parts.
+
+7:33
+
+- So we have this thing in CSS 1 or 9, which is called the CSS one of nine Personal Challenge.
+
+7:37
+
+- And it works like this.
+
+7:41
+
+- If there's a problem that you're really curious about and you want to take the concepts you learned in CSS 1 or 9 and apply it to that problem,
+
+7:43
+
+- we're giving you the opportunity to do that in the form of an extra credit challenge.
+
+7:49
+
+- So just like all the extra credit 1 or 9, it's truly optional.
+
+7:53
+
+- I'm going to calculate everybody's final grades, set the grade boundaries before I add an extra credit.
+
+7:57
+
+- This is the same thing, but the CSS one of nine personal challenge takes it up a notch.
+
+8:01
+
+- When you guys submit the personal challenge, there's going to be one grand prize winner.
+
+8:05
+
+- That grand prize winner is going to replace their midterm score and their final exam score with 100%.
+
+8:10
+
+- So if you can demonstrate what you know in CSS 1 or 9 through one of these personal projects,
+
+8:17
+
+- and we see your personal project and we think it's this grand prize winner, you're actually going to find out before you take the final.
+
+8:21
+
+- So then you wouldn't need to take the final exam. And we'll replace both of your exam scores with 100%.
+
+8:25
+
+- We think that some people learn in this way.
+
+8:30
+
+- Some people are able to learn by showing what they know through these really creative projects to get excited about a topic they're able to like,
+
+8:32
+
+- go deep in CSS nine and show it in this way.
+
+8:37
+
+- Of course, some people are able to show what they know, um, through exams outside of the grand prize winner,
+
+8:39
+
+- outside of the grand prize winner, people who make a meaningful project submission are going to get extra credit as well.
+
+8:45
+
+- So of course, we have this like grand prize winner who we're going to like, be super excited about.
+
+8:50
+
+- But anybody who makes a meaningful contribution in the form of this project is going to get some form of extra credit as well.
+
+8:53
+
+- So it's not like, oh, if I'm not the best, I get nothing. Does that make sense?
+
+8:58
+
+- Cool. So I released a handout on the page where you can read a lot more about it.
+
+9:03
+
+- It's due March 11th in great scope. You guys can read the handout, but what you're going to submit is a video where you like,
+
+9:07
+
+- introduce us to your project, and then you're also going to submit like a write up explaining like what you did.
+
+9:12
+
+- And then go through this I go through this. We get really excited when we get to view these projects.
+
+9:16
+
+- So you guys can go ahead and read more about that. You can talk to us in office hours.
+
+9:20
+
+- I love talking to people about their personal projects in office hours. Um, but that's a super exciting thing.
+
+9:23
+
+- And we just released it today. Cool.
+
+9:28
+
+- Okay. Uh, back to the course material.
+
+9:32
+
+- We're going to do a couple of practice examples to warm us up before we get into, uh, kind of like the meatier concepts of today.
+
+9:33
+
+- We have a lot of these on your worksheet if you want to follow along with those.
+
+9:40
+
+- Okay. To get us started, I want to define E1E to an n to be events.
+
+9:44
+
+- So we know, uh, of course, what events are. And then we're going to have what we call an indicator random variable.
+
+9:52
+
+- I'm going to get to that in a second. But we're going to have this random variable x I and x I is going to be a one if event II happens.
+
+9:57
+
+- Does that make sense. So x I equals one is the same thing as event one happens.
+
+10:04
+
+- And then x I. Being zero is the same thing as event one complement.
+
+10:08
+
+- So I'm taking a random variable x, and I'm using it to explain the probability of event I.
+
+10:13
+
+- We also know these as Bernoulli random variables, right? Bernoulli random variables can either take on a 0 or 1 probability,
+
+10:18
+
+- and the probability they are one is going to be the probability of whatever event you want that random variable to be.
+
+10:23
+
+- So indicators is a fancy word we're going to use today I'm gonna use throughout the rest of course.
+
+10:28
+
+- 109 that's a fancy name for a Bernoulli random variable. Okay.
+
+10:31
+
+- So let's say e1 e2. We have this setup.
+
+10:35
+
+- I want to say the expectation of x one or x I in this case is going to be equal to the probability of event y.
+
+10:40
+
+- I told you guys this is true. I want you guys to take a minute. Talk to the person next to you and reason why.
+
+10:51
+
+- Why is this true? Okay. Does that make sense? I told you guys these things.
+
+10:55
+
+- I want you guys to formalize it into. Like, why does this thing that I just showed you on the board make sense?
+
+10:59
+
+- Okay. Take a minute to talk to the person next to you. Uh, this is problem one on your sheet.
+
+11:03
+
+- If you guys want to write it down there. Okay, let's walk through this together.
+
+11:06
+
+- So what I said is, I said the event of the random variable x I being one is the same as event y,
+
+12:30
+
+- and then z zero is the same as the event y complement.
+
+12:36
+
+- So these are just the same way I wrote these events. So if I want to show what's expectation of random variable x I.
+
+12:39
+
+- Well by our formula for expectation that's going to be one times the probability
+
+12:44
+
+- that x I equals one plus zero times the probability that x I equals zero.
+
+12:49
+
+- And the probability that x I equals one is the same as the probability of event I happening.
+
+12:55
+
+- And of course this is going to be zero. So that goes away. You guys feeling good with this?
+
+13:01
+
+- Nod your heads if you're feeling good with this example of expectation. Okay, perfect.
+
+13:06
+
+- So I'm just gonna put the same thing on the board. I just wrote zero first instead.
+
+13:10
+
+- Um, but this is just a way to remember that the expectation of our, uh,
+
+13:13
+
+- indicator random variable here is going to be the probability of the event that the indicator random variable represents.
+
+13:17
+
+- That's like another way of saying this. I mean, we can always just get there by doing our regular formula for expectation.
+
+13:23
+
+- Um, okay, I forgot about the story.
+
+13:28
+
+- There's this guy named George Boole, and he didn't invent, uh, these like boolean or indicator random variables, but he did like,
+
+13:31
+
+- used them extensively and is like responsible for, like, um, a lot of math that led to, like, why modern day computers work.
+
+13:35
+
+- And a fun story about Boole is that he actually died of being too cool.
+
+13:40
+
+- Um, and what I mean by that is he lived in Ireland, and he caught a cold on the way to lecture one day,
+
+13:45
+
+- but really, he was, like, so dedicated to teach to his students. Like, instead of going home, he's like, no, I'm going to like, teach my students.
+
+13:50
+
+- And he like, went to lecture. And then, uh, he was really good at probability, but he like, wasn't that good at medicine.
+
+13:55
+
+- Um, so basically they thought that, um, to get unstuck, if you like, recreated the conditions at which you got sick, then like that would heal you.
+
+13:59
+
+- So he started taking, like, a lot of ice baths. Um, and then, yeah, he died from being from being too cool for that.
+
+14:06
+
+- Um, anyway, a little spooky story for this Friday the 13th, but not very important.
+
+14:11
+
+- Won't be on the final exam. Um, okay, on to our next example.
+
+14:15
+
+- This example is with differential privacy. Um, so if you guys don't know about differential privacy,
+
+14:20
+
+- it's this kind of like field of study where people have data sets and they want people to do things with this data set,
+
+14:24
+
+- but they don't want to leak the information that's in that data set.
+
+14:31
+
+- So maybe you have like medical records or like sensitive student data, um, or otherwise like sensitive data.
+
+14:34
+
+- And you want to be able to like, do downstream tasks with this data, but you don't want to leak any of the privacy that's in that data set.
+
+14:39
+
+- Um, Cynthia, Cynthia Talk did a lot of work in this.
+
+14:45
+
+- Um, she's a professor at Harvard. But if you guys are curious, you can learn about more about this field.
+
+14:49
+
+- But we're going to do an example in differential privacy. And it works like this. Let's say you have 100 independent values um x one through x 100.
+
+14:53
+
+- And maybe these are like zeros and ones. And you can't give people those zeros and ones like if they knew the exact sequence
+
+15:01
+
+- of zeros and ones that would cause some problem in like leaks and privacy.
+
+15:06
+
+- So what you do instead is you write this program, and this program, um, is going to calculate a random variable y.
+
+15:09
+
+- And with some probability it's going to give you the actual x I. And with some probability it's going to give you some like random number.
+
+15:15
+
+- And so this way you can kind of give people something similar to like a bunch of ones and zeros similar to what the X's are.
+
+15:20
+
+- But you're not leaking any information. You guys are like, maybe this is like a crazy thing to do, but this is like something super realistic.
+
+15:26
+
+- And then if you give somebody this program, they could sample it many times,
+
+15:33
+
+- and then they could reason about the underlying probability of those XS being a one or a zero,
+
+15:36
+
+- but you're not going to be leaking any data through this method.
+
+15:41
+
+- Okay, so why I is going to be the random variable for what's returned from the program.
+
+15:45
+
+- And Z is going to be that like sensitive data which is like the input to the program.
+
+15:50
+
+- Does that make sense? Okay. So the first question I want you guys to think of.
+
+15:54
+
+- Oh, and then of course random is going to be like a 50% probability of like returning true or false.
+
+15:57
+
+- Um, in this case. So the first question I want you guys to think of is what is the expectation of y I.
+
+16:01
+
+- Okay, so why is what's returned? I guess to see if you can reason about what's the expectation of why, and specifically to get started if you can.
+
+16:09
+
+- So recall that, uh, why I is actually I'm not going to raise a hand.
+
+16:16
+
+- I'll just let you guys go go run with this. But this is from to a on your sheet.
+
+16:21
+
+- So can you read about what's going to be the expectation of why I, uh,
+
+16:24
+
+- given this program take two minutes, talk to the person next to you will come back together.
+
+16:28
+
+- A. What have.
+
+17:45
+
+- Yeah. Yeah.
+
+17:59
+
+- So that's one. And then. Uh, okay.
+
+18:03
+
+- I didn't give you enough time, probably to work through the whole thing, but let's come back together.
+
+18:11
+
+- So the explanation of why I remember that, why I can either be A01.
+
+18:14
+
+- Right? This program can either return to 0 or 1.
+
+18:18
+
+- So it's going to be one times the probability that y is one plus zero times the probability that y I is zero.
+
+18:20
+
+- Cool. Okay, so now let's think about what's the probability that this is going to be zero.
+
+18:32
+
+- So that's why I just canceled that. So now we can think about what's the probability that y is going to be one.
+
+18:36
+
+- Well uh either spooky knot where I could return.
+
+18:41
+
+- True. And there's a 50% that could happen. So it's gonna be one half.
+
+18:44
+
+- And then if, uh, returns true, then it's going to return a one with a 50% chance to ask me one half times, one half.
+
+18:47
+
+- And then if that random variable returns false, then, uh, there's going to be a one half chance of that.
+
+18:56
+
+- And if it returns false, then we're just given back whatever x I is an x I is a one with probability p right xyz a Bernoulli and a variable.
+
+19:00
+
+- So don't be left with a p right here. So the expectation of x I is going to be one fourth plus p over two.
+
+19:07
+
+- Cool. I'm just going to put the same thing, uh, on the side. So we have one fourth plus p over two or p over two plus one fourth.
+
+19:19
+
+- Okay. Let's take it up a notch. So now you can see if you made one call of the program.
+
+19:26
+
+- Then your expected value is going to be related to P. Kind of like in this way.
+
+19:30
+
+- But instead of making one call the program let's make 100 calls to the program.
+
+19:34
+
+- So I'm going to define a random variable z. And z is going to call this program 100 times.
+
+19:38
+
+- And it's going to sum up all the values. Does that make sense. So I'm going to why I was calling the program once.
+
+19:43
+
+- Now I'm going to call it 100 times and sum of all those values and store that in a random variable called z.
+
+19:48
+
+- Now I want you guys to see if you can think about what's the expectation of this random variable Z.
+
+19:54
+
+- And I wrote some properties that might be helpful. They're a little bit small. So sorry about that.
+
+19:58
+
+- Um but you can see if those help you solve this.
+
+20:02
+
+- Okay. Take some time. Talk to the person next to you, see if you can figure out what the expectation of Z is.
+
+20:05
+
+- Do you have a question? Okay, let's come back.
+
+21:20
+
+- So what we said is Z is going to be this random variable where you sum from I equals 1 to 100 of y I.
+
+22:07
+
+- Okay. So I wrote down the expectation of z is going to be the expectation of the sum from I equals 100 from 1 to 200 of y I.
+
+22:14
+
+- Can anybody help me out. What what do we do next here? And look what I have a whole bag of Swedish fish y.
+
+22:20
+
+- Yeah. Perfect.
+
+22:27
+
+- So how would I rewrite this? Perfect.
+
+22:32
+
+- So the idea is. Oh, because the expectation of sums is the sum of expectations, then we can pull the summation outside and we can do the,
+
+22:37
+
+- uh, sum from I equals 1 to 100 times the expectation of y I for a whole bag of Swedish fish.
+
+22:44
+
+- Let's see how aerodynamic these are. Not that I need like.
+
+22:51
+
+- Sorry. Um, perfect.
+
+22:55
+
+- Okay, so I'm just gonna write that same thing on the board, but the sum of expectations is going to be, uh, the expectation of sums.
+
+22:57
+
+- And then in the last problem, we computed the expectation of y.
+
+23:02
+
+- I, um, so just to recap, um, p is going to be the probability that each random variable x I is a one or a zero.
+
+23:06
+
+- And then it is this different, uh, variable in this program that we were using.
+
+23:15
+
+- That's not the same as P. It just helps us reason about, uh, P in this kind of, like, differential privacy setting.
+
+23:18
+
+- Okay. So we know the expectation of y. I, uh, from the last slide is going to be p over two, uh, plus one fourth.
+
+23:24
+
+- So then we can plug that in for this value. P over two plus one fourth.
+
+23:30
+
+- And then that's going to be 50 times p plus 25 is what you're gonna be left with here.
+
+23:40
+
+- So we have that same thing on the board. Okay, so the next question I have for you is like, why is this setup still helpful for us?
+
+23:45
+
+- Right. So we can compute an expected value of z like y.
+
+23:53
+
+- Why is that helpful in terms of like determining p in terms of differential privacy setting.
+
+23:56
+
+- And the reason it's helpful is because we can estimate p.
+
+24:00
+
+- So when I want to estimate something I put like a little hat on top of it. We'll see that later on in 1 or 9 two.
+
+24:03
+
+- But my estimate for P is I can take Z, I can subtract 25 and I can divide by 50.
+
+24:08
+
+- Right. If I like write out what this is.
+
+24:13
+
+- We said the expected value of z is £0.50 -25.
+
+24:16
+
+- So if I just wanted to get p on its own, I could do uh z minus R plus 25 divided by 50.
+
+24:22
+
+- Now I mess this up. Sorry Z -25 and divide by 50.
+
+24:28
+
+- Does that make sense? And I could get like some kind of estimate for what P could be.
+
+24:32
+
+- So this is how can be helpful. So I told you guys, uh, Z is the sum of a bunch of y I's.
+
+24:38
+
+- Is there anything else we know about Z. Maybe that we learned last class that could give us some more information here.
+
+24:44
+
+- Why do we know the variance? Exactly.
+
+24:55
+
+- So last part, we learned that if Z is going to be the sum of a bunch of i.i.d. random variables, which it is, then the central limit theorem kicks in.
+
+25:00
+
+- When n is 100. We're definitely big enough to use the central limit theorem. So we can actually model Z as like a whole random variable.
+
+25:06
+
+- We would know its expectation. We would also know its variance through there.
+
+25:11
+
+- And so if we have Z as a whole random variable, we can actually tell you how confident are we in our estimate of this probability p.
+
+25:14
+
+- So if we're able to run the program a hundred times a thousand times, you could get really,
+
+25:21
+
+- really confident in your estimate of P using a combination of the central limit theorem and this idea of expectation, which we're learning today.
+
+25:24
+
+- So even when people hide things from you, like using this spooky program where they're not giving you the actual zeros and ones,
+
+25:30
+
+- you can still reason really, really well about the underlying data, which is a super powerful, uh, tactic.
+
+25:35
+
+- Questions? Ideas? Yeah. Yep.
+
+25:40
+
+- Yeah. So if you did the the variance of sums is also going to be the sum of variances if you have a bunch of like i.i.d. random variables.
+
+25:46
+
+- But you can also use the central limit theorem version. Yeah.
+
+25:52
+
+- And that the central theorem is actually why the variance of sums is only the sum of variances if they're i.i.d.
+
+25:55
+
+- Um, anyway, other questions about this. Good question.
+
+26:00
+
+- How do you get the. Cool.
+
+26:03
+
+- Um, just in case anybody's curious, differential privacy is like a super active area of research,
+
+26:06
+
+- especially concerning like how AI models can be trained on data sets when people don't want to, like, leak sensitive information.
+
+26:11
+
+- Um, if you're curious about it, I just linked, like, one paper from, like, a famous professor at Stanford who works in this area,
+
+26:16
+
+- but I just people are usually curious about, like, ways they can take one online and put it in the research space.
+
+26:20
+
+- So this is one of them. Okay. Let's get on to my next example.
+
+26:24
+
+- So you guys have probably heard of Amazon. You like gone online and like bought stuff from Amazon.
+
+26:29
+
+- Um, and what I think a lot of people might not know. Or maybe you guys know this, but I think this is surprising to me.
+
+26:34
+
+- Um, was that what do you think Amazon is and how it makes its money?
+
+26:39
+
+- It's actually not the storefront. Um, in a lot of ways. And what I mean by that is when Amazon was early being started, uh,
+
+26:42
+
+- there was this project that actually happened in Cape Town in 2006, which I'll talk about in a second.
+
+26:49
+
+- And it basically, uh, this idea was born of like Amazon Web Services,
+
+26:53
+
+- which is where they get like a crazy amount of their revenue, and it's where they host a bunch of, like, data centers.
+
+26:56
+
+- And then people pay them to like, use those data centers and use those computers.
+
+27:00
+
+- And it's like a massive, massive part of their business specifically,
+
+27:03
+
+- like 74% of Amazon's profits actually come from this Amazon Web Services platform and not from like when you're shopping online.
+
+27:06
+
+- Um, it's like one of the reasons why they can charge super low prices when you're shopping online for things,
+
+27:12
+
+- because they make so much profit off of Amazon Web Services.
+
+27:15
+
+- And basically how it works is early when Amazon was being started, there were days of the year when it was like really busy on Amazon.
+
+27:18
+
+- And so they needed to own all these computers so that they could handle all the traffic on those busy days.
+
+27:25
+
+- But then the rest of the year they were like, hey, we have all these computers and like, we're not using them.
+
+27:30
+
+- Like, how about we see if people will pay us to like, use them? Um, and that was kind of like the idea behind Amazon Web Services.
+
+27:34
+
+- And then it's expanded into this like bigger thing. So you're like, why are you giving me a history lesson on this?
+
+27:39
+
+- We're going to do a problem that talks about computer cluster utilization.
+
+27:44
+
+- Uh, kind of thinking about that Amazon setting. Okay.
+
+27:47
+
+- So imagine your Amazon, your computer cluster, you have like k different servers.
+
+27:50
+
+- Requests can independently go to each server I with probability pi.
+
+27:56
+
+- So like a request comes in and with some probability p it goes to like this server with some probability pi goes like this server.
+
+28:01
+
+- Does that make sense. So like if our requests are going to get um, different servers, you're going to get requests based on their probabilities.
+
+28:07
+
+- And then we're going to define an event. I an I is the event that server I receives no requests.
+
+28:13
+
+- So random time period here. And we're saying like uh, the event I mean server I receives no requests in this time period.
+
+28:21
+
+- Now I'm going to define X is going to be my random variable. And x is going to be the number of events IA1 bob author n that occur.
+
+28:28
+
+- And what that means is that's going to be the number of servers that receive no requests.
+
+28:37
+
+- Is that making sense this setup. So a random variable that counts the number, um, of servers that have no requests in this like time period.
+
+28:42
+
+- Questions about the problem. And then we'll get to practice one.
+
+28:50
+
+- Okay. If I could answer this question, what's my expected number of servers with no requests,
+
+28:54
+
+- then I could be really smart about how I like lend those out to people, right?
+
+28:58
+
+- Like if I knew they were going to be 50 idle servers, then I could give those 50 idle servers to people, or they could pay me for them or whatever.
+
+29:01
+
+- So does the problem setting make sense? Why we would care about something like this?
+
+29:06
+
+- Cool. Okay, so I want you guys to solve the expectation of, um, this random variable x after the first n requests.
+
+29:10
+
+- But the first thing I want you to do before, before you solve that whole thing is can you talk to the person next,
+
+29:16
+
+- you can think about can you express the random variable x as a sum of some other random variable?
+
+29:21
+
+- It's going to be a little bit hard to think of X on its own right now. So you guys I talk to the person next.
+
+29:27
+
+- Can you can you define x as the sum of some other random variables.
+
+29:30
+
+- And then we can figure out how we can get the expectation from there. Okay.
+
+29:34
+
+- Take a minute. Talk to the person next to you. Um see if you can do that task.
+
+29:37
+
+- Okay, let's bring it back together. Um, okay.
+
+31:30
+
+- This is what I want to do for the setup. So remember, X is gonna be our random variables for the number of servers that don't have any requests.
+
+31:34
+
+- So what I'm going to do is, uh, remember, I is going to be the event that server I gets your requests.
+
+31:41
+
+- So I'm going to make what I'm going to call an indicator random variable b. And b is going to be one if I happens.
+
+31:46
+
+- So b is going to be a one. If server I get zero requests and b I is going to be a zero if I compliment.
+
+31:52
+
+- So if server uh, I gets anything other than zero requests like one, two, three, so on.
+
+31:57
+
+- Does that make sense? Up my random variable is because then what I can do is I can rewrite x as a sum from I equals one to k,
+
+32:02
+
+- let's say of these indicator random variables, because if b is a one, if I happens, then x is going to be the sum of all of the pieces, right?
+
+32:11
+
+- Because like uh, if server one gets one request or gets no request, that's a one.
+
+32:20
+
+- If server two gets no request, that's a one. If server three gets like two requests zero and so on.
+
+32:23
+
+- Okay, nod your head if you're feeling happy with this definition so far. Perfect.
+
+32:29
+
+- Um, okay, so this is how I'm going to define my random variable x.
+
+32:32
+
+- And now you want to think about how can we get the expectation of this. Okay.
+
+32:37
+
+- That's gonna be the next I want you to think about. So this how to find excited. Find X to be the sum of these indicator random variables.
+
+32:42
+
+- And now I want to think of how we get the expectation. Yeah. Do you have an idea. No. Yeah.
+
+32:48
+
+- That expectation. So you said we could, like, pull this out. Okay, then I want.
+
+32:55
+
+- That's a great idea. So anyway, you guys think how would you get the expectation of this term too?
+
+33:00
+
+- So if you can think about how to get the activation of X, and you're also in that,
+
+33:03
+
+- you're going to need to think about how to get the expectation of this random variable as well.
+
+33:07
+
+- Okay. Take a minute or 30s and talk to the person next to you and see if you can think about how to solve this.
+
+33:11
+
+- And then when we come back, I'll ask for I have Sour Patch watermelons or Sour Patch regular.
+
+33:15
+
+- Okay. Back together. So, uh, I rewrote this so we know X is going to be the sum of these indicator and variables b I.
+
+34:56
+
+- And so I said the explanation of x is going to be uh, the expectation of the sum of bits.
+
+35:02
+
+- And then what we learned from the last example, uh, where we had the Swedish Fish, I, we're going to pull the sum out.
+
+35:06
+
+- So the sum from I equals one to k times the expectation of by this where we are now.
+
+35:11
+
+- But now we need to think, okay, what's the expectation of this indicator. Any variable by.
+
+35:15
+
+- Does anybody have any ideas. Yeah.
+
+35:19
+
+- And yeah. Perfect.
+
+35:23
+
+- So you set the expectation of be I. Is going to be equal to the probability of AI happening.
+
+35:32
+
+- Perfect. We'll pass this back and then can somebody help out? Will you mind passing this back.
+
+35:39
+
+- How would we figure out the probability of event AI. Yeah.
+
+35:43
+
+- Yeah, it's just pie. So, uh, that is a really good guess of AI, but AI is going to be no server.
+
+35:48
+
+- I get zero requests. And it gets a request with pi one minus pi.
+
+35:54
+
+- Yep. And I'm going to say that we have n requests. And it can't get any requests in any of those n.
+
+36:01
+
+- Yep. So he said one minus pi.
+
+36:08
+
+- And then can someone help me out? Oh, you said. Yeah. Yeah.
+
+36:12
+
+- What am I saying to the end? Perfect. You guys can all get candy. Oh, I owe you guys all candy, but I'll give that to you.
+
+36:16
+
+- Um, perfect. So the oxidation of B is going to be one minus the probability that.
+
+36:19
+
+- So this is the property of the server doesn't get a single request.
+
+36:23
+
+- And then if we give n request we can't have it get uh we have to have it that raise to the n.
+
+36:26
+
+- Does that make sense. You could also think of this as a binomial if you had like n requests.
+
+36:30
+
+- So it's like n zero and then like p zero with one minus pi two.
+
+36:34
+
+- Then in this case either way if that's helpful okay. I'm just gonna put the same thing that we had on the board.
+
+36:37
+
+- So the probability that a single server gets zero requests after n requests is going to be one minus pi to the n.
+
+36:42
+
+- And then we had the great idea that the expectation of x is just going to be, um,
+
+36:48
+
+- the expectation of the indicator random variable, which is going to be the sum here.
+
+36:51
+
+- So if we plug this back in up there, we're going to get the expectation of x is equal to the sum from I equals one to k of one minus pi to the n.
+
+36:56
+
+- Questions about this example. Cool.
+
+37:13
+
+- Okay. Um, and then I just plug this in. Okay.
+
+37:19
+
+- So I think a major key before we move on to the next example is like, if you're stuck thinking about one random variable,
+
+37:22
+
+- if you can express that as a sum of other random variables, then you might be able to like leverage some of these tricks.
+
+37:27
+
+- So if you're reasoning through a problem and you get this random variable x,
+
+37:32
+
+- which is like pretty hard to think of on its own, can you describe x as a sum of other random variables?
+
+37:35
+
+- That's kind of like the first trick that we're going to learn. Um, in terms of expectation today.
+
+37:38
+
+- Okay. I'm excited. Are you guys ready for the next example?
+
+37:43
+
+- So for the next example, we're going to think I think of a problem where you're like buying buying toys, uh, purchasing toys.
+
+37:46
+
+- And specifically you're a collector and you're trying to collect and distinct toys.
+
+37:52
+
+- So if you have like, Beanie Babies or like Pokémon, for example,
+
+37:58
+
+- and you're trying to collect like, um, at least one of each type, does that make sense?
+
+38:00
+
+- So you want n distinct toys, and every time you purchase a toy, each toy's equally likely.
+
+38:04
+
+- So, uh, in this example, they're going to be four toys.
+
+38:09
+
+- And every time you buy a toy, uh, there's going to be like, well, one of each toy and you just grab one of them.
+
+38:11
+
+- And then if you went to buy it again, they would like replenish the one, whichever one you grab. So it's always like equally likely to get any toy.
+
+38:16
+
+- Um, and so in this example, if you have like these like four little cute toys are so cute.
+
+38:22
+
+- Um, every time you would like go to purchase one, all of these are an option and you just get to pick one of them.
+
+38:26
+
+- Okay. So in this problem we're going to say x is going to be the number of purchases you have.
+
+38:32
+
+- Until the number of purchases you make, until you have at least one of each toy.
+
+38:38
+
+- Does that make sense? So I want to know, like how many toys, what I have to buy until I know an expectation that I have at least one of every kind.
+
+38:42
+
+- Questions about the problem set up. I don't think about reasoning through it together.
+
+38:50
+
+- Okay. No question. So the first thing I want to think about, same thing as last problem is can you express x as a sum of other random variables.
+
+38:57
+
+- We're going to use that trick again in this problem. So see if you can talk to the person next to you.
+
+39:03
+
+- And when we eventually want the expectation of x.
+
+39:06
+
+- But as a first step we're going to think how can we define x as a sum of other random variables before we do that?
+
+39:09
+
+- Okay. Take a minute to talk first next to you. See if you can come up with that. People.
+
+39:14
+
+- That is a reasonable. Okay idea.
+
+41:01
+
+- So I just rewrote this, I said. I said X is going to be a sum of like some other random variables.
+
+41:08
+
+- And I just want to say like okay,
+
+41:12
+
+- what conceptually like in in English if you were describe like what these random variables are, what do people come up with.
+
+41:13
+
+- What's one way we could define x. Yeah. Or sorry what the number of.
+
+41:18
+
+- You need to purchase the yellow one. Okay, perfect.
+
+41:25
+
+- I'm gonna say this one is going to make the number of purchases. Until first.
+
+41:28
+
+- And then what would this one be for a second? Okay.
+
+41:36
+
+- And I'm going to define it as like after you purchase the first toy, how many times until you got the second.
+
+41:39
+
+- Does it make sense okay. So after first number of purchases.
+
+41:43
+
+- Until second. And then same thing here.
+
+41:52
+
+- This would be like after the second one the number of purchases until the third. You want sour patch watermelon Swedish Fish or Sour Patch Kids.
+
+41:56
+
+- Okay, perfect. Um, so this is exactly how how, um, I thought of this two.
+
+42:08
+
+- And then you can think of this, like, the number of purchases until you get your first toy.
+
+42:12
+
+- Plus, after you are your first toy, the number of purchases you got, the second, and so on.
+
+42:15
+
+- Yeah. Question. Is there a chance to get a coin?
+
+42:18
+
+- The question is like every time you purchase another one, for any chance of getting lost,
+
+42:25
+
+- it every time you just to get some toy, you never stop the toy.
+
+42:30
+
+- Where am I reading the question? Yeah. Great question. So the question is like if every time you get a toy, you're at least going to get one toy.
+
+42:34
+
+- And we want to know how many purchases until we have, like all of the types of toys.
+
+42:39
+
+- Does that make sense? So there are like four types. Like every time I get a toy.
+
+42:44
+
+- But then like, let's say I bought the yellow toy and I go home and then when I come back tomorrow, they like replace the yellow toy.
+
+42:46
+
+- So now when I like, close my eyes and go to buy a new toy, I could pick the yellow toy again.
+
+42:51
+
+- And then I would like go home. And then the next day I come back and like, I really want at home to at least have like one of the four types.
+
+42:55
+
+- Let's say to three purchases until you get. Oh, is it the first toy or the, uh, the first type of toy?
+
+43:03
+
+- Something like, let's say. Does that mean that each purchase?
+
+43:10
+
+- I do not guarantee to get a point like I did not get a.
+
+43:13
+
+- Every time you get a choice.
+
+43:18
+
+- So like I'll give you an example like let's say I go to the store and tomorrow I get this like yellow bird and then I go home,
+
+43:19
+
+- and then tomorrow I come back and I have four options again, I have one of these four and it's equally likely.
+
+43:24
+
+- And now I get the yellow bird again. And then I go home. And I only have one type of toy, but I have two toys.
+
+43:27
+
+- Then I come back and then I get the purple toy. Now finally I got the second type of toy.
+
+43:32
+
+- Does that makes sense? Because let's say these three purchases to get the first one I have like maybe a purple and blue and then one that overlap.
+
+43:36
+
+- Like then why would we start my two with the.
+
+43:45
+
+- I feel like maybe we'll go through the rest of the problem and then if we're so confused, we can talk after.
+
+43:49
+
+- But yeah. Question. The first one just um.
+
+43:53
+
+- Yeah. Great insight. So the insight was, is this first one always one?
+
+43:57
+
+- Because like the first time you pick a toy, you're going to get one of the ones you don't have because you don't have any.
+
+43:59
+
+- Yep. So this one's always going to be one.
+
+44:03
+
+- And then now y two is not always going to be one because like you could have maybe you got the other toy again.
+
+44:05
+
+- And maybe you always get the yellow toy. And that's going to take a really long time. Question.
+
+44:09
+
+- So um, in general you have a probability of and minus nine minus one over and over getting.
+
+44:12
+
+- Okay. Let's go down in a second. I like that we have the probability of how we get a new toy.
+
+44:21
+
+- Um okay. Perfect. So if I said this is what X is and this I defined y.
+
+44:25
+
+- Does anybody recognize y is like a certain type of random variable?
+
+44:30
+
+- And why did you say that? Perfect.
+
+44:34
+
+- So that. Exactly right. So the idea is like each of these y is going to be its own geometric.
+
+44:38
+
+- It's like the number of trials until the first success. And the reason I define it this way is because I can use them each as their own geometric.
+
+44:42
+
+- Does that make sense? So this going to be the number of trials until the first success, which is always going to be one toy.
+
+44:48
+
+- Then this is after you pulled your first toy you like, set your counter at zero and it's like,
+
+44:52
+
+- okay, now how many purchases does it take me to get my second toy? And of course, the first time is always me one.
+
+44:56
+
+- So like, you just go and you pick your like, you pick your yellow bird and the only thing you want to try to get this one.
+
+45:02
+
+- So now the question is like you have one yellow bird. Now how many tries until you get your second distinct toy?
+
+45:06
+
+- And so then we'll have to think about like the expected number of trials.
+
+45:12
+
+- And then okay, let's say I pulled a bunch of yellow birds and then finally I pulled like the purple guy.
+
+45:15
+
+- So now I have a bunch of yellow birds and like one purple person and it's like, okay, now how many purchases until I get one of the other two types?
+
+45:19
+
+- Does that make sense? So we can define y as our geometric.
+
+45:25
+
+- And then a geometric random variable needs a p. And for each eye we're going to have a different probability of success.
+
+45:31
+
+- And then we had an idea for a for how we could do the probability. Because it is.
+
+45:39
+
+- Really complex. But there's like I already have.
+
+45:47
+
+- If you want to pick some one or the other. Totally.
+
+45:52
+
+- I'm going to start us at zero. I'm going to start I zero and then you just don't have the minus one.
+
+45:55
+
+- But yeah, the idea is like on the first try let's say you're at y0 instead of y1.
+
+45:59
+
+- If I go back to the zero index then you have like a four over four, just like 100% probability of getting a new toy, right.
+
+46:03
+
+- Like you're walking to the toy store, you're definitely going to get a new toy the first time.
+
+46:09
+
+- Okay, now you got the yellow bird. So now next time you go, you have a three fourths chance of getting one of the other toys.
+
+46:13
+
+- Does that make sense? So you already bought the yellow bird. So you have a three out of four chance of getting a new one.
+
+46:18
+
+- And then, uh, until you get the next one. Then finally you get the little milk.
+
+46:22
+
+- Guys, I have the yellow bird and little milk. And then the next time you go, you have a two out of four chance of getting one of the remaining ones.
+
+46:25
+
+- Does that make sense? How this probability changes depending on what your on the each one question.
+
+46:31
+
+- So. Instead of saying number two.
+
+46:36
+
+- Number of persons to get one. Stick to it.
+
+46:41
+
+- Yeah, maybe I'll say like first distinct and then second distinct like that.
+
+46:45
+
+- That makes more sense. Yeah. It's like I meant is I should have said type of [INAUDIBLE]. Yeah. You guys are right. Yeah.
+
+46:52
+
+- I think that's what your question really was built. That was. Yeah.
+
+46:56
+
+- Perfect. Okay, so then if y I is a geometric with like this probability.
+
+47:00
+
+- If we want the expectation of x, x is going to be the sum of y.
+
+47:04
+
+- I's right. And so if we want the sum.
+
+47:08
+
+- Can anybody help me out. I mean sorry for the activation of X. How would we do that.
+
+47:13
+
+- Perfect. So what would that be in this case? Perfect.
+
+47:24
+
+- The sum of items. Expectations. Why?
+
+47:31
+
+- And then you said this is going to be. Let's do an over and minus I in this case because we just flip it.
+
+47:36
+
+- So the expectation of a geometric is just one over the probability and like one over this.
+
+47:43
+
+- You just flip the numerator oops. And put the nominator. You put it in here. Of course.
+
+47:46
+
+- And we'll plug this into the sums would be the sum over I times of and over and minus I question.
+
+47:51
+
+- Let's do this. And this might help. Does that help?
+
+48:06
+
+- Yeah, definitely. Right. Sorry, I should have written my zero index. You could do.
+
+48:16
+
+- Yeah, n plus one minus I or like n minus I plus I minus one or.
+
+48:19
+
+- Yeah something. But if you define it zero it just makes it a little bit easier. I think I defined it a zero on the slides.
+
+48:23
+
+- Um but yeah. Good catch. Other questions. Cool.
+
+48:28
+
+- Okay. I'm just gonna put everything we had on the slide. So we defined X as, um, the number of trials to get success.
+
+48:33
+
+- After that, I have success where success is getting an unseen toy. So an unseen toy is another way to think of like a distinct toy.
+
+48:39
+
+- Like a toy you haven't seen yet. And then after success, is the probability being the next success is going to be n minus I over n,
+
+48:45
+
+- and then we can rewrite exactly what I have on the board. Um, in case you're curious, this sequence right here, um,
+
+48:51
+
+- n times like this sounded like one over n plus one over n minus one plus one over n like goes to log n.
+
+48:58
+
+- So in case you were curious, you would have to buy like n times log n.
+
+49:02
+
+- You'd have to make n times log n purchases in expectation to get at least one of each toy.
+
+49:05
+
+- Um, maybe you wouldn't have this happen in toy land.
+
+49:09
+
+- This does happen a lot of times in, uh, programs when, like with some random probability, you'll get some outcome that you want to explore.
+
+49:12
+
+- You need to see, like how many times do you have to explore to get that outcome?
+
+49:17
+
+- Uh, but kind of fun to think of the land in the Land of Toys on Friday. Okay.
+
+49:20
+
+- Does it is your question answered from before about okay, good.
+
+49:24
+
+- Other questions? Yeah.
+
+49:28
+
+- O big O notation. It means like, um, how many times on in expectation are you going to have to run your program?
+
+49:34
+
+- Um, and so like big O, we use a lot of times like in algorithms to say, like, how long will it take your algorithm to like,
+
+49:40
+
+- run or like maybe how much space does your computer need to take up, depending on which one you're thinking of?
+
+49:45
+
+- Um, yeah. Great question. Know. Teaching. Okay.
+
+49:50
+
+- So we're about to combine some concepts so that in a peanut butter and jelly you have like peanut butter that's so good.
+
+49:56
+
+- And you have like jelly that's like so good. But then when you combine them together it's like better than either one of them on your own.
+
+50:02
+
+- Right? That's like the premise of like a peanut butter and jelly. And today that's what's going to happen with conditional expectation.
+
+50:07
+
+- You have like conditional probability and you have like expectation. And they're like both so fine on their own.
+
+50:11
+
+- But like when you bring them together they're like way more fun than either of them on their own.
+
+50:15
+
+- So first I'm going to give you guys some definitions. And then we're going to go back to working through problems.
+
+50:19
+
+- So I'm just going to like tell you some things.
+
+50:23
+
+- Um, and then you guys can kind of trust me on them and then we'll walk through some problems that will hopefully build some intuition.
+
+50:24
+
+- Okay. Let's do it. So there is this thing called conditional expectation.
+
+50:29
+
+- We know about expectation of a random variable.
+
+50:33
+
+- Now we're going to think about the expectation of that random variable given some other random variable has taken on a value.
+
+50:36
+
+- So these are the formulas in the top line x and y are discrete.
+
+50:42
+
+- Um, there's also continuous random variables that we're going to focus on discrete ones for today's lecture.
+
+50:45
+
+- So what this is saying is the expectation of a random variable. Given some background random variable y takes on a value.
+
+50:50
+
+- And then you're just going to plug into the regular formula for expectations.
+
+50:56
+
+- You're going to sum over all values that random x could take on. But now you're going to multiply it by the probability it takes on that value.
+
+50:59
+
+- Given you're in the world where that background random variable y happened.
+
+51:05
+
+- So when you are in the land of conditional probability, all of the rules of probability still apply.
+
+51:10
+
+- Same thing with the definition of expectation.
+
+51:15
+
+- Just every time you condition on Y, then you're going to need to make sure the probabilities also conditioned on y.
+
+51:17
+
+- Um, this same formula is just going to be on the next slide.
+
+51:23
+
+- So you also have it. It's in the top right corner. But let's think about this. Imagine you roll two two dice like dice one and dice two.
+
+51:26
+
+- And you want to think ooh that didn't like that. We want to think about what's the sum of those two dice.
+
+51:32
+
+- Right. We think about this a lot. So I'm going to say yeah X is going to be the sum of like dice one plus dice two.
+
+51:37
+
+- But I'm going to tell you why is the value of dice two. So now we're going to think about okay what's the sum.
+
+51:42
+
+- What's what's the expected value of the sum given we know what dice two is.
+
+51:48
+
+- That's like a question you could ask. Right. You could say like what's the expected value of the sum.
+
+51:52
+
+- Or you could say what's the expected value of the sum given? I know some other event already happened.
+
+51:55
+
+- And in this case let's say I want to know what's the expectation of x the sum of two dice given.
+
+51:59
+
+- I told you y is six. So we're living in a world where why is six?
+
+52:03
+
+- I'm just going to plug this into the formula that we thought about that we talked about earlier.
+
+52:09
+
+- But if I want to know this new value, I'm going to sum over all values that you take on and then multiply,
+
+52:12
+
+- uh, multiply by the probability that x is that value given y is equal to six.
+
+52:18
+
+- As you guys know, the sum of two dice could be anywhere from like two through 12.
+
+52:22
+
+- But once I told you the first date is a six, the probability that x is like two, three,
+
+52:25
+
+- four, or 5 or 6 is now zero, or like the sum of two dice can't possibly be two.
+
+52:30
+
+- If I told you one of the dice is a six. So the only possible values we have are seven, eight, nine, ten, 11, 12.
+
+52:33
+
+- Because if I told you two is a six, then these are the only possible options you have left.
+
+52:40
+
+- And then each of them have equal probability because the probability the sum is seven.
+
+52:44
+
+- That means you like roll to one on the next dice. The probability it's an eight means you rolled a two, and so on.
+
+52:48
+
+- So that's going to be one six probability times each of those possible outcomes.
+
+52:53
+
+- Nod your head if this is making sense. Cool. So this is how you get the expected value of the sum of two dice given.
+
+52:57
+
+- I told you the outcome of one of them. And so, um.
+
+53:03
+
+- You could think this is like there's some intuition on the bottom of the slide, but this is really similar to saying like,
+
+53:09
+
+- okay, it's six plus the expected value of whatever is left on day one because you already got a six.
+
+53:13
+
+- Now what's the expectation of like what you get on day one. And that's 3.5.
+
+53:17
+
+- And so the expected value is going to be six plus 3.5. Just two ways to get some like intuition here.
+
+53:21
+
+- Okay. Yeah. Question. Does that always work? As long as that second random variable doesn't depend on the first random variable.
+
+53:27
+
+- Yes. Yeah. Yeah. Um, okay.
+
+53:38
+
+- So what I gave you on the last slide was I gave you conditional expectation as a number.
+
+53:41
+
+- Right? I told you what that background variable y took on. I told you that value was, uh, six on a dice.
+
+53:45
+
+- But a lot of times you're going to do conditional expectation and you're going to get back a function.
+
+53:50
+
+- So like when you plug it in, you know, when I say like what's the probability that x equals little x.
+
+53:54
+
+- That's a function. But if I said what's the probability that x takes on like the value seven, then you would get back a number.
+
+53:58
+
+- This is how we think of conditional expectation as a function. So uh if I define this function what's the conditional expectation of x given y.
+
+54:03
+
+- Um remember that functions map like inputs to output. So you would put like some input in for y we could put in like uh five.
+
+54:11
+
+- And then we would like get out some output. I'll go back to my clicker.
+
+54:18
+
+- Maybe you put in five and you get out 12 as an example. Um you could put in other inputs.
+
+54:22
+
+- You could like put in Y as three and then you get as output six. So if I say the expectation of x on its own that's a number.
+
+54:26
+
+- But the expectation of x conditioned on y where I put in like a little y.
+
+54:33
+
+- That's a function. Questions about that. Okay.
+
+54:37
+
+- Perfect. So perfect. This is what I was saying. So, like, if you just want the activation random variable, that's a number.
+
+54:44
+
+- If you want the expectation of a random variable conditioned on another random variable where I don't tell you what that variable has taken on yet,
+
+54:49
+
+- that's going to be a function. Okay. Let's get some examples.
+
+54:55
+
+- So let's say x is somebody favorite number and y is their year in school.
+
+55:01
+
+- Okay. I want to know, uh, the expectation of somebody's favorite number given their year in school.
+
+55:06
+
+- That's what I want to say. And I think to help us think about how this is a function, like you should be able to graph a function, right?
+
+55:11
+
+- Like anytime we have a function, you should be able to like plot it. So that's not this graph.
+
+55:16
+
+- But let's see what it would look like if we did graph. So this is a histogram where like the x axis is your favorite digit.
+
+55:19
+
+- And the y axis is like the probability that it's like somebody's favorite digit.
+
+55:26
+
+- Does that make sense. So these are like just different people's digits in 109 as an example.
+
+55:30
+
+- So like I haven't conditioned on here yet I'm just telling you guys people's favorite digit. It turns out a lot of people really like the digit seven.
+
+55:34
+
+- Uh, when we ran this, maybe that's unsurprising. Lots of people's favorite numbers.
+
+55:39
+
+- Okay, so if I just wanted the expectation of somebody's favorite number on their own, I can just do the regular formula for how we get expectation.
+
+55:43
+
+- And it turns out the expected favorite number is like 5.38in 1 or 9.
+
+55:49
+
+- But now I want to say, what's the expected, uh, favorite number condition on somebody's year in school?
+
+55:54
+
+- So somebody has 1 or 9, and I want to know this conditioned on their year in school.
+
+56:00
+
+- And let's say I gave you this table where y is a year in school. So maybe I have like sophomore, junior, uh senior and like beyond.
+
+56:04
+
+- And then I have the expected value of x given y.
+
+56:10
+
+- Does that make sense of this table. So I've just given you that same function.
+
+56:14
+
+- But I gave it to as a table. Now this is the expected value of x given y takes on each of these values.
+
+56:17
+
+- So uh, maybe somebody who's a junior if somebody year in school is a junior, the expected favorite number given their juniors 5.8.
+
+56:23
+
+- So if I were to plot this, what this would look like. Y is the year in school and X is the expected favorite number given that's their year in school.
+
+56:29
+
+- And I don't know, maybe as you get closer to being a senior,
+
+56:37
+
+- you like like my favorite number is in one to your grades and you're like, oh, I like I like low numbers a lot better.
+
+56:40
+
+- I don't know, I don't know what this is telling us, but does that make sense?
+
+56:44
+
+- What this plot is, we can show like, uh, as you change things, like you're in school,
+
+56:46
+
+- uh, y is going to be your expected favorite number, given that's your year in school.
+
+56:50
+
+- I think this is maybe a more interesting one. So X is going to be the number of units.
+
+56:55
+
+- Take the number of units somebody takes in fall quarter. And y is going to be your year in school.
+
+56:59
+
+- Then this plot is going to be the expected number of units given Y is or year in school.
+
+57:04
+
+- And maybe this makes sense. Like freshmen are all the way on the left. They take like so many units freshmen fall and then like oh sad times.
+
+57:07
+
+- And they take like less, uh, as you, as you get in older classes.
+
+57:12
+
+- Um, okay. Questions about conditional expectation as a function before we do some problems.
+
+57:16
+
+- Yeah, they could just be points instead of like a line. Yeah, I think the lines just to show that like, you can plot this because it's a function.
+
+57:27
+
+- Um, but yeah. Good point. You probably shouldn't. It's like not really continuous.
+
+57:34
+
+- Probably. Cool.
+
+57:37
+
+- Okay, now I want to show you guys something cool, and I'm going to walk through a proof on the slides.
+
+57:44
+
+- And it's okay if you guys don't follow every single line of the proof.
+
+57:49
+
+- You guys totally can. It's not too hard, but I'm going to on the slides instead of on the board, um, for this one.
+
+57:53
+
+- But let's say I wrote this equation. So remember the expectation of x, you're gonna like sum over all the values of x and you're gonna little x.
+
+57:57
+
+- You're gonna multiply it by the probability.
+
+58:05
+
+- But now I'm gonna do this weird thing where, like instead of putting in little x, I'm going to put in the conditional expectation.
+
+58:06
+
+- Okay, so I just kind of like, did a really weird thing here.
+
+58:12
+
+- And now we're going to see, like, what does this simplify to to it like simplify to anything nice for some reason.
+
+58:15
+
+- So this way put on the left. Now I'm going to I'm going to plug in this some because that's going to be the definition of expectation.
+
+58:20
+
+- Right. So the definition of conditional expectation like excitation of x given y equals y which we put here that was on the slides.
+
+58:27
+
+- We're just going to plug this in for that inner term. So now we have the sum over y times the sum over x of the property x equals x.
+
+58:33
+
+- Given y equals y times the probability y equals y. You guys with me I just plugged in the definition of conditional expectation.
+
+58:39
+
+- Okay. The next thing I'm going to do is there's two most right terms.
+
+58:47
+
+- The probability that x equals x given y times the probability y equals y.
+
+58:50
+
+- That's just the definition, um, of the that's going to be the chain rule.
+
+58:55
+
+- That's going to be the probability that x equals x and y equals y. Right.
+
+58:59
+
+- So I'm just going to rewrite that. The probability that x equals x given y times y is just the same thing a probability of x and probability of y.
+
+59:03
+
+- This is like the numerator of Bayes rule. We've done this like so many times that simplification.
+
+59:09
+
+- Okay. So now we have this double sum x times the joint probability of x and y.
+
+59:13
+
+- Okay. Now I'm going to do something kind of crazy. This is like the craziest part of the proof.
+
+59:19
+
+- But it's like totally legal when you have double sums. I'm just going to switch the order.
+
+59:23
+
+- So like I was summing over y that I'm summing over x. But now I'm going to sum over x and then sum over y.
+
+59:27
+
+- It's kind of like in your program if you're like for looping over y in the near for looping over X you could switch those,
+
+59:32
+
+- you could like for loop over X and then for loop over Y. Okay. So what I'm going to do between these next two lines.
+
+59:36
+
+- Probably the craziest part of the proof but like very legal in math okay.
+
+59:41
+
+- The reason I did that is because now this inner sum, when you sum over y to have x times the probability of x equals x to y equals y.
+
+59:45
+
+- Sorry. Now I'm going to pull out the x ray because the x doesn't depend on the Y stem.
+
+59:55
+
+- Okay, guys are with me. We're summing over x times x and then the rightmost.
+
+1:00:00
+
+- And we're summing over y times the probability that x equals x and y equals y.
+
+1:00:04
+
+- We've seen this before. This is like in joint. Whenever you want to get like the marginal probability of x you can like sum over all values of y.
+
+1:00:08
+
+- See what's the probability of x and the probability of y here.
+
+1:00:15
+
+- So this just replaces with the probability of x.
+
+1:00:18
+
+- Oh and then what you get is the sum over x times x times the probability x x which is of course the expected value of x.
+
+1:00:21
+
+- So again it's okay if you didn't follow that proof line by line.
+
+1:00:30
+
+- But basically what I showed you is this really nice formula for this equation we're going to use in
+
+1:00:32
+
+- x 1 to 9 over and over again which has a super fancy name which is the law of total expectation.
+
+1:00:36
+
+- Major key. This is what the law of expectation looks like for any discrete random variable x and discrete random variable y.
+
+1:00:41
+
+- You can rewrite the expectation of x as this term.
+
+1:00:47
+
+- A lot of times you won't know the random variable x on its own.
+
+1:00:51
+
+- You'll only know the random variable x in relation to some background random variable y,
+
+1:00:54
+
+- but you still want to reason about things like the expectation of x. We're going to see this over and over again.
+
+1:00:58
+
+- We look at like analysis of programs. You guys are going to do this on your set in those last couple of problems.
+
+1:01:03
+
+- Um, and then you'll also see this in many later classes.
+
+1:01:07
+
+- Questions about the law of total expectation. Okay.
+
+1:01:11
+
+- People are feeling good so far. So now we're going to do a problem with Netflix.
+
+1:01:23
+
+- Netflix is like our background. Uh, we have a lot of, like, uh, highly motivated problems today.
+
+1:01:28
+
+- Okay. So Netflix streams a lot of videos per day, and they store the movies in databases,
+
+1:01:33
+
+- like around the world, and they really care about the speed of the following code.
+
+1:01:40
+
+- And you can think of this code as like, how fast is it when, like I say,
+
+1:01:45
+
+- I want to watch a movie, the Netflix is able to like play that movie for me, right?
+
+1:01:48
+
+- And when Netflix has to do is go in, like figure out where the movie is stored and then like, send it to your computer.
+
+1:01:51
+
+- Does that make sense? So when we say like database dot get movie, I'm sure they have like a better name for it.
+
+1:01:56
+
+- Um, whatever the name of the movie is, we want to say, how long does it take for them to, like, send you that movie?
+
+1:02:00
+
+- And maybe I can think of like, how long does it take them to send, like each packet of that movie to you?
+
+1:02:05
+
+- Um, if you want to think about it like that. Okay. So these are the different options.
+
+1:02:08
+
+- And let's say like if the database is stored in Palo Alto, like maybe I'm at home, I'm watching this movie.
+
+1:02:13
+
+- If it's stored in Palo Alto, it's gonna be really fast for them to send me that movie.
+
+1:02:17
+
+- If the database is stored somewhere, like in Los Angeles, it's going to take them a little bit longer.
+
+1:02:21
+
+- But, you know, not that much longer to send that data to me.
+
+1:02:25
+
+- If it's stored somewhere like Japan, maybe it takes somewhere like five minutes for them to send that,
+
+1:02:28
+
+- like, you know, all the way across the world to me.
+
+1:02:31
+
+- And then for some reason, if we were like storing data like in outer space, I don't know, maybe like in the future,
+
+1:02:33
+
+- then it might take something like two hours for them to send that data to me, for me to watch the movie.
+
+1:02:38
+
+- Does that make sense? So if I was Netflix and I wanted to.
+
+1:02:42
+
+- What's the expected runtime it would take to send a movie to Juliet who's watching us a movie on Netflix?
+
+1:02:45
+
+- How can I reason about that? So what you need is you need the different locations where the data could be stored.
+
+1:02:50
+
+- You need the the approximate runtime it would take for them to send it to me, given what location they're in.
+
+1:02:57
+
+- And then they also know the probability that that movie is stored in that location.
+
+1:03:02
+
+- Does that make sense? Okay. So I'm just going to walk through this one.
+
+1:03:06
+
+- And then we're going to do um the next one, the next couple ones you guys will do.
+
+1:03:09
+
+- But I'm going to do this one. So basically if we just use that law of total expectation that we walk through, um, you have total expectation.
+
+1:03:13
+
+- The expected runtime is we're going to do the expected runtime given each of these locations times the probability is in that location.
+
+1:03:19
+
+- Does that make sense. So we're going to do the, uh, expected runtime given the locations Palo Alto Times,
+
+1:03:25
+
+- the Palo Alto expected runtime given the locations LA times, the probability in L.A. random given Japan, and so on.
+
+1:03:31
+
+- Questions about this. This is just straightforward law of total expectation.
+
+1:03:39
+
+- A practice. Cool.
+
+1:03:45
+
+- Okay. People are feeling good. Okay. Now, this is where where you can get pretty tricky with the law of total expectation.
+
+1:03:52
+
+- So imagine you're doing recursion.
+
+1:03:58
+
+- And maybe more specifically, instead of like you're doing recursion, you're like looking at some of these recursive code that they gave you.
+
+1:04:01
+
+- Maybe, maybe we'll be a happier on a Friday and think about that. So imagine somebody gave you this recursive code,
+
+1:04:05
+
+- and y is going to be the value returned by recursion by recursive in this function by recurse I want to know what's the expected value of.
+
+1:04:11
+
+- Why does it make sense? What I'm asking you. You have this program.
+
+1:04:18
+
+- It's a recursive program. It's going to return some value. Why? We're going to make that a random variable.
+
+1:04:22
+
+- And we want to think what's the expected value that it returns.
+
+1:04:26
+
+- Okay, I'm gonna give you guys three minutes because you have to read the code and then map through this and then see if you can figure out,
+
+1:04:30
+
+- okay, what is the expected value that is returned by this function.
+
+1:04:34
+
+- So. Oh.
+
+1:06:29
+
+- Hmm. Kind of good timing. You have a question that you want to share, like an answer or just in general an answer?
+
+1:07:33
+
+- To this? Yeah. Everything.
+
+1:07:49
+
+- Lifestyle. Expectation. I like it, and what would we do? Perfect summation.
+
+1:07:53
+
+- I'm going to write it. What are the three or what are the options we would sum over?
+
+1:08:01
+
+- If if I write the sum symbolic, what would I sum over? Um.
+
+1:08:08
+
+- Perfect. All right. Said so. You want me to sum over, like, what does that mean, right.
+
+1:08:18
+
+- In this case. And then you can say the expectation. I.
+
+1:08:24
+
+- Perfect. I'll say like y equals whatever I is that we're summing over good times.
+
+1:08:34
+
+- Perfect. Y equals I. I like this in this case. You want some candy.
+
+1:08:43
+
+- All right. This is for you. Um, cool. Okay, so let's think about this is going to be the law of total expectation here.
+
+1:08:49
+
+- So can someone tell me what are going to be the cases that we want to sum over in this program.
+
+1:08:55
+
+- We can say like the. Sum of the extinction of x.
+
+1:08:58
+
+- Given what are the options that Y could be perfect times the probability y is one.
+
+1:09:04
+
+- What else can it be? Okay I don't want to write this.
+
+1:09:11
+
+- And what's the last value. Perfect.
+
+1:09:19
+
+- And how did you get that. X.
+
+1:09:23
+
+- Yeah, exactly. So in this code, um, x can be like any random integer that's equally likely to be between like one and three.
+
+1:09:34
+
+- And that means it could be like one, 2 or 3.
+
+1:09:39
+
+- So our background random variables x, y could either be one, y could either be two or y could either be three.
+
+1:09:41
+
+- I just left some space because we're going to write down what those values are in a second.
+
+1:09:46
+
+- Um, but now I want to think about okay. It's the expectation of x given y is one x of x.
+
+1:09:50
+
+- Given y is two x of x, given y is three. Okay. Does somebody else have an idea?
+
+1:09:54
+
+- How could I do this? First one what's the expectation of x?
+
+1:09:58
+
+- Yeah. Um. And how did you get that?
+
+1:10:01
+
+- That's perfect. And then what's the probability that x equals one?
+
+1:10:08
+
+- Oh, maybe I should have done this backwards. I did do this backwards. Okay.
+
+1:10:13
+
+- So let's say this is the probability of x I like that better. Y in this case.
+
+1:10:16
+
+- Okay. So you said this was one third. I'm just going to change my variables.
+
+1:10:25
+
+- And then you can think of what you do for either of these cases while I change these variables really quickly.
+
+1:10:27
+
+- I want to give a marker to. Okay.
+
+1:10:38
+
+- So we want the expected value of y given x is one.
+
+1:10:42
+
+- Okay. And then we said this is going to be three times one third okay.
+
+1:10:52
+
+- How about this one. Yeah. Okay.
+
+1:10:55
+
+- So I'm going to put a five plus and then use it to do the expectation of Y.
+
+1:11:00
+
+- How did you get that. Um, because the way I thought about it was like every time you see the first beautiful possible expectation of y.
+
+1:11:03
+
+- That's what that. Exactly. So if we want to know the expectation of y.
+
+1:11:11
+
+- And, uh, recurse is going to give us back, like in expectation y if we go like five plus recurse, it's the same.
+
+1:11:16
+
+- These are like five plus. What's the expectation of Y here. And then we're going to multiply it by one third because that's a probability being two.
+
+1:11:20
+
+- And then how about can somebody help me out with the last one. Yeah. Uh, so perfect seven.
+
+1:11:28
+
+- Perfect. Plus the expectation of y times one third.
+
+1:11:35
+
+- Perfect. Okay. So then I'm just going to rewrite this over here.
+
+1:11:39
+
+- And I'm going to simplify some of the terms. I'm just going to like do some some math here.
+
+1:11:43
+
+- But we're going to rewrite the expectation of y is going to be equal to.
+
+1:11:47
+
+- So we have like three plus five plus y times one third and then seven plus the expectation of y times one third.
+
+1:11:51
+
+- I'm just going to rewrite that. That's going to give us is 15/3 plus two thirds times the expectation of y in the slides.
+
+1:11:58
+
+- In a second I'll walk through. And you guys can just like double check my math. You guys are on the same page.
+
+1:12:10
+
+- Okay. How do we go about solving this? Because now I have an expectation of y on both sides of my equation, which is like what?
+
+1:12:14
+
+- Anyone who hasn't spoken today for more candy. Anybody.
+
+1:12:21
+
+- Uh, we want to. So I'm gonna do it in the reverse order, but I.
+
+1:12:31
+
+- All the things you said, I'm just gonna multiply by three first.
+
+1:12:37
+
+- So we have three times the expectation of y is equal to 15 plus two times the expectation of y.
+
+1:12:39
+
+- And then now we can subtract two times y from each side.
+
+1:12:46
+
+- Get rid of the three. And then now we know the expression of y is 15.
+
+1:12:50
+
+- So we want to think about the expected value that's returned by this recursive function. It's going to be 15 in this case.
+
+1:12:54
+
+- Questions about this program. Yeah. Um why exactly is it like.
+
+1:12:59
+
+- Is like every right expedition or why such a great question.
+
+1:13:05
+
+- Yeah. You're like, what's happening here? Basically, every time we call recurse, we're going to get why like as the return value from a curse.
+
+1:13:09
+
+- Does that make sense? So like in expectation when we call recurse we're going to get back like the expected value of y.
+
+1:13:17
+
+- And y we of different value. I guess I guess because it's expectation that.
+
+1:13:26
+
+- Exactly. It's like because we're always asking for the expected value of y.
+
+1:13:31
+
+- Like every time you call this function, you would get a different thing for y.
+
+1:13:33
+
+- But when you think about like in expectation, uh, that's just going to be like one number.
+
+1:13:36
+
+- Does that make sense? Like even though y is random variable and you think about an expectation, the expectation isn't going to change.
+
+1:13:39
+
+- Yeah. Good question. It's a super tricky thing to do. Uh, that we're kind of like rewriting in this form.
+
+1:13:43
+
+- But it's really helpful for reasoning about things like recursive programs. Okay.
+
+1:13:47
+
+- I'm just going to put the same thing I wrote on the board in slides.
+
+1:13:51
+
+- But this is like how you can rewrite that equation. And then we can think all of these probabilities are one third.
+
+1:13:54
+
+- And then now we'll just rewrite these two probabilities five plus x and y and seven plus expectation of y here.
+
+1:13:59
+
+- Do you do do all my little math and it gives me this. Okay, this problem, we just did you guys on your homework.
+
+1:14:04
+
+- The last problem, you guys are going to think about all these kinds of issues, and you're going to take them.
+
+1:14:12
+
+- And it's going to be like one level up, you know,
+
+1:14:15
+
+- because it's like homework and you have time to do it and you're going to think about this problem, um, algorithmic analysis dice rolls.
+
+1:14:17
+
+- We're not going to do it now. But just so you guys know now, you are totally well set up, uh, for this problem on the set.
+
+1:14:22
+
+- Okay, the next thing I want to talk about is where we are in case 1 or 9.
+
+1:14:28
+
+- Um, we're about to go into this lesson, which is called information theory.
+
+1:14:32
+
+- And that's going to be the lesson we have on Wednesday. On Monday we don't have any lecture. It's like a holiday.
+
+1:14:37
+
+- But on Wednesday we're going to go into this lecture called Information theory. And information theory is going to allow us to do this thing.
+
+1:14:40
+
+- Does anybody play Wordle because I know played Wordle. Yeah. It's like so fun.
+
+1:14:46
+
+- Okay. So there's this bot that's called like a word robot. And it can guess the words in Wordle.
+
+1:14:49
+
+- And it will pick the best guess that will give you the most information.
+
+1:14:54
+
+- So you can guess like what the next one will be. So like maybe you could guess the word like Kate.
+
+1:14:57
+
+- No, it has to like five letters. Um, like it would guess like spring or something.
+
+1:15:01
+
+- Like maybe you think that was like a really good word to guess. Um, and so it's these called word robots.
+
+1:15:05
+
+- And the reason they built because are able to leverage this idea of, like, how much information can I get from doing this?
+
+1:15:09
+
+- Guess. And by next lecture at the end of next lecture, you guys are going to learn how to build your own word a what you're going to go on your PC,
+
+1:15:14
+
+- you're going to build your own Wordle bot that can tell you like how to make, like,
+
+1:15:19
+
+- really smart Wordle guesses because they're all going gonna be ready to do that after next class.
+
+1:15:22
+
+- But that lecture is gonna be a really fun time if you have a strong understanding of what we did today,
+
+1:15:26
+
+- that lecture is going to be like a less fun time. If the things you do today like are super confusing to you.
+
+1:15:32
+
+- So luckily we have a lot of time between today's lecture and Wednesday,
+
+1:15:37
+
+- but I want to challenge you guys to take that time and really make sure you practice.
+
+1:15:39
+
+- Like, can you do all of the problems really well on the worksheet that I have?
+
+1:15:42
+
+- Can you guys do a really good about your day going into Wednesday's lecture?
+
+1:15:46
+
+- Because then you'll be so ready for this topic, um, of information theory and beyond the word a lot.
+
+1:15:48
+
+- This was like the most requested topic that we added to CSE, 1 or 9 only in the last two quarters,
+
+1:15:52
+
+- because I faculty have been like, we really, really want this covered before they come into our classes.
+
+1:15:57
+
+- This is why this was like the most important thing to learn. So I want you guys to feel set up, um, to learn that.
+
+1:16:01
+
+- Okay, then there's no lecture on Monday due to the holiday. The server knows.
+
+1:16:09
+
+- So we will have class on Wednesday. Okay. Thank you guys so much.
+
+1:16:12
+
+- I'll see you guys on Wednesday. Have a good weekend and I'll pull up the attendance right now.

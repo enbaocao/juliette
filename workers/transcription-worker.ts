@@ -1,8 +1,13 @@
+// Load environment variables FIRST before any imports
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+
+// Now import everything else
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { openai } from '@/lib/openai';
 import { Job } from '@/lib/types';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as os from 'os';
 
 const POLLING_INTERVAL = 5000; // 5 seconds
