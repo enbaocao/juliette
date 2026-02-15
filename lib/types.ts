@@ -4,7 +4,9 @@ export interface Video {
   user_id: string;
   title: string;
   storage_path: string;
-  status: 'uploaded' | 'transcribed';
+  status: 'downloading' | 'uploaded' | 'transcribed';
+  youtube_url?: string;
+  source?: 'upload' | 'youtube';
   created_at: string;
 }
 
@@ -61,10 +63,12 @@ export interface LiveSession {
 
 export interface Job {
   id: string;
-  type: 'transcribe' | 'render';
+  type: 'transcribe' | 'render' | 'download';
   payload: {
     video_id?: string;
     storage_path?: string;
+    youtube_url?: string;
+    user_id?: string;
     template?: string;
     params?: Record<string, any>;
   };

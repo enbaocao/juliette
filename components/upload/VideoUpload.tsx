@@ -3,9 +3,13 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
+type UploadMode = 'file' | 'youtube';
+
 export default function VideoUpload() {
+  const [mode, setMode] = useState<UploadMode>('file');
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
@@ -68,9 +72,16 @@ export default function VideoUpload() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!file || !title) {
-      setError('Please select a file and enter a title');
-      return;
+    if (mode === 'file') {
+      if (!file || !title) {
+        setError('Please select a file and enter a title');
+        return;
+      }
+    } else {
+      if (!youtubeUrl) {
+        setError('Please enter a YouTube URL');
+        return;
+      }
     }
 
     setUploading(true);
@@ -78,24 +89,42 @@ export default function VideoUpload() {
     setError('');
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('title', title);
+      if (mode === 'file') {
+        // File upload
+        const formData = new FormData();
+        formData.append('file', file!);
+        formData.append('title', title);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Upload failed');
+        }
+
         const data = await response.json();
-        throw new Error(data.error || 'Upload failed');
+        router.push(`/videos/${data.videoId}`);
+      } else {
+        // YouTube URL
+        const response = await fetch('/api/upload-youtube', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ youtube_url: youtubeUrl }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to add YouTube video');
+        }
+
+        const data = await response.json();
+        router.push(`/videos/${data.video_id}`);
       }
-
-      const data = await response.json();
-
-      // Redirect to video page
-      router.push(`/videos/${data.videoId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
@@ -105,9 +134,60 @@ export default function VideoUpload() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Tab Switcher */}
+      <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
+        <nav className="flex space-x-8">
+          <button
+            type="button"
+            onClick={() => {
+              setMode('file');
+              setError('');
+            }}
+            className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              mode === 'file'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              Upload File
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('youtube');
+              setError('');
+            }}
+            className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              mode === 'youtube'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              </svg>
+              YouTube Link
+            </div>
+          </button>
+        </nav>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Drag and Drop Area */}
-        <div
+        {mode === 'file' ? (
+          <>
+            {/* Drag and Drop Area */}
+            <div
           className={`relative border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
             dragActive
               ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
@@ -189,22 +269,46 @@ export default function VideoUpload() {
           )}
         </div>
 
-        {/* Title Input */}
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-2">
-            Video Title
-          </label>
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Introduction to Calculus - Derivatives"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
-            disabled={uploading}
-            required
-          />
-        </div>
+            {/* Title Input */}
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium mb-2">
+                Video Title
+              </label>
+              <input
+                type="text"
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g., Introduction to Calculus - Derivatives"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
+                disabled={uploading}
+                required
+              />
+            </div>
+          </>
+        ) : (
+          /* YouTube URL Input */
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="youtube-url" className="block text-sm font-medium mb-2">
+                YouTube URL
+              </label>
+              <input
+                type="url"
+                id="youtube-url"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
+                disabled={uploading}
+                required
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                Paste a YouTube video link to download and transcribe it
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -232,10 +336,20 @@ export default function VideoUpload() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={!file || !title || uploading}
+          disabled={
+            mode === 'file'
+              ? !file || !title || uploading
+              : !youtubeUrl || uploading
+          }
           className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
         >
-          {uploading ? 'Uploading...' : 'Upload Video'}
+          {uploading
+            ? mode === 'file'
+              ? 'Uploading...'
+              : 'Adding Video...'
+            : mode === 'file'
+            ? 'Upload Video'
+            : 'Add YouTube Video'}
         </button>
       </form>
     </div>
