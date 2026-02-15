@@ -19,9 +19,11 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Juliette",
+    images: ["/banner.png"],
   },
   twitter: {
     card: "summary_large_image",
+    images: ["/banner.png"],
   },
   robots: {
     index: true,

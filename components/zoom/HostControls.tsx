@@ -230,7 +230,7 @@ export default function HostControls({
       <div className="bg-blue-50 rounded-lg p-4">
         <h3 className="font-semibold text-blue-900 mb-2">💡 Tip</h3>
         <p className="text-sm text-blue-700">
-          Start a session to enable students to ask questions. They'll get instant AI-powered
+          Start a session to enable students to ask questions. They&apos;ll get instant AI-powered
           explanations during class!
         </p>
       </div>

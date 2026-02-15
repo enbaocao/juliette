@@ -72,14 +72,14 @@ export async function POST(request: NextRequest) {
     // Generate new video ID
     const videoId = randomUUID();
 
-    // Create video record with status='downloading'
+    // Create video record with status='downloading' (fetching transcript)
     const { error: videoError } = await supabaseAdmin
       .from('videos')
       .insert({
         id: videoId,
         user_id: DEMO_USER_ID,
-        title: `YouTube Video (${validation.videoId})`, // Temporary title, will be updated by worker
-        storage_path: '', // Will be set by download worker
+        title: `YouTube Video (${validation.videoId})`, // Temporary title from video ID
+        storage_path: '', // No storage needed - transcript fetched directly from YouTube
         status: 'downloading',
         youtube_url: youtube_url,
         source: 'youtube',
@@ -121,12 +121,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`✓ Created download job for YouTube video: ${youtube_url}`);
+    console.log(`✓ Created transcript fetch job for YouTube video: ${youtube_url}`);
 
     return NextResponse.json({
       video_id: videoId,
       status: 'downloading',
-      message: 'YouTube video download started',
+      message: 'Fetching YouTube transcript',
     });
   } catch (error) {
     console.error('Upload YouTube API error:', error);

@@ -40,13 +40,16 @@ export function useZoomApp() {
         console.log('Meeting context:', meetingContext);
         console.log('Running context:', runningContext);
 
+        // Type assertion needed as SDK types might be incomplete
+        const contextAny = meetingContext as any;
+
         // Extract context information
         setContext({
-          meetingUUID: meetingContext.meetingUUID || '',
-          meetingNumber: meetingContext.meetingID?.toString() || '',
-          userName: runningContext.context?.user?.userName || 'Guest',
-          userEmail: runningContext.context?.user?.email,
-          role: runningContext.context?.user?.role === 1 ? 'host' : 'attendee',
+          meetingUUID: contextAny.meetingUUID || '',
+          meetingNumber: contextAny.meetingID?.toString() || '',
+          userName: (runningContext as any).context?.user?.userName || 'Guest',
+          userEmail: (runningContext as any).context?.user?.email,
+          role: (runningContext as any).context?.user?.role === 1 ? 'host' : 'attendee',
         });
 
         setIsLoading(false);
