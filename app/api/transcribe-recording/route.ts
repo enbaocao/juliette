@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 // Configure route
 export const runtime = "nodejs";
 export const maxDuration = 300; // 5 minutes for transcription
+
+const execAsync = promisify(exec);
 
 interface TranscriptSegment {
   start: number;
@@ -140,24 +147,66 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Created video record: ${video.id}`);
 
-    // Send directly to OpenAI Whisper without persisting the file
-    console.log("🎤 Forwarding file to OpenAI Whisper...");
+    // Whisper prefers audio. If the uploaded file is a video, convert it to audio via ffmpeg.
+    console.log("🎤 Preparing media for OpenAI Whisper...");
 
-    // Convert uploaded File to Buffer then append as a Blob to ensure proper multipart encoding
-    const arrayBuffer = await (file as File).arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const inputArrayBuffer = await (file as File).arrayBuffer();
+    const inputBuffer = Buffer.from(inputArrayBuffer);
+    const inputType = (file as any).type || 'application/octet-stream';
+    const inputName = (file as any).name || 'upload';
+
+    let audioBuffer: Buffer = inputBuffer;
+    let audioContentType = inputType;
+    let audioFilename = inputName;
+
+    const looksLikeVideo =
+      inputType.startsWith('video/') || /\.(mp4|mov|webm|mkv)$/i.test(inputName);
+
+    if (looksLikeVideo) {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'juliette_whisper_'));
+      const inputPath = path.join(tmpDir, inputName.replace(/[^a-zA-Z0-9._-]/g, '_'));
+      const outputPath = path.join(tmpDir, 'audio.mp3');
+
+      try {
+        fs.writeFileSync(inputPath, inputBuffer);
+        // -vn strips video, -ar sets sample rate, -ac sets mono, libmp3lame is widely supported
+        const cmd = `ffmpeg -y -i "${inputPath}" -vn -ar 16000 -ac 1 -b:a 64k "${outputPath}"`;
+        console.log('Running ffmpeg:', cmd);
+
+        await execAsync(cmd, { timeout: 120000, maxBuffer: 20 * 1024 * 1024 });
+
+        audioBuffer = fs.readFileSync(outputPath);
+        audioContentType = 'audio/mpeg';
+        audioFilename = 'audio.mp3';
+        console.log('✅ Converted video to audio for Whisper:', {
+          bytes: audioBuffer.length,
+          contentType: audioContentType,
+          filename: audioFilename,
+        });
+      } catch (ffmpegErr) {
+        // If conversion fails (ffmpeg missing, unsupported codec, etc.), fall back to original.
+        console.warn('⚠️ ffmpeg conversion failed; falling back to original upload:', ffmpegErr);
+        audioBuffer = inputBuffer;
+        audioContentType = inputType;
+        audioFilename = inputName;
+      } finally {
+        try {
+          fs.rmSync(tmpDir, { recursive: true, force: true });
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    // Build multipart request for OpenAI
     const openaiForm = new FormData();
-    // Preserve MIME type and filename (OpenAI needs correct type/extension to decode)
-    const contentType = (file as any).type || "application/octet-stream";
-    const filename =
-      (file as any).name || `upload.${contentType.split("/")[1] || "bin"}`;
-    const fileBlob = new Blob([buffer], { type: contentType });
+  const fileBlob = new Blob([new Uint8Array(audioBuffer)], { type: audioContentType });
     console.log("Uploading file to OpenAI:", {
-      filename,
-      contentType,
-      size: buffer.length,
+      filename: audioFilename,
+      contentType: audioContentType,
+      size: audioBuffer.length,
     });
-    openaiForm.append("file", fileBlob as any, filename);
+    openaiForm.append("file", fileBlob as any, audioFilename);
     openaiForm.append("model", "whisper-1");
     openaiForm.append("response_format", "verbose_json");
     openaiForm.append("timestamp_granularities[]", "segment");

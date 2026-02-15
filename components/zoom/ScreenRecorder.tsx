@@ -23,30 +23,70 @@ export default function ScreenRecorder({
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const pickSupportedMimeType = () => {
+    // Prefer Opus in WebM (best-supported in Chromium-based browsers, incl. Zoom Apps)
+    const candidates = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/ogg;codecs=opus",
+    ];
+    for (const type of candidates) {
+      if (MediaRecorder.isTypeSupported(type)) return type;
+    }
+    return ""; // Let browser default
+  };
+
   const startRecording = async () => {
     try {
       setError(null);
       chunksRef.current = [];
 
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { displaySurface: "window" } as MediaTrackConstraints,
-        audio: true,
-      });
+      // Audio-only recording for Vercel-friendly transfers.
+      // We try to include system audio when possible, but always fall back to mic.
+      let stream: MediaStream | null = null;
+      let gotSystemAudio = false;
+
+      try {
+        // In some environments, getDisplayMedia(audio:true) captures system audio.
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: false,
+          audio: true,
+        } as any);
+        const hasAudio = displayStream.getAudioTracks().length > 0;
+        if (hasAudio) {
+          stream = displayStream;
+          gotSystemAudio = true;
+        } else {
+          displayStream.getTracks().forEach((t) => t.stop());
+        }
+      } catch {
+        // Ignore: user might deny screen-share or Zoom might not allow it.
+      }
+
+      if (!stream) {
+        // Mic-only fallback (works more reliably across browsers)
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+          video: false,
+        });
+      }
 
       streamRef.current = stream;
 
-      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-        ? "video/webm;codecs=vp9"
-        : MediaRecorder.isTypeSupported("video/webm;codecs=vp8")
-        ? "video/webm;codecs=vp8"
-        : "video/webm";
-
-      console.log("Using MIME type:", mimeType);
-
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType,
-        videoBitsPerSecond: 2500000,
+      const mimeType = pickSupportedMimeType();
+      console.log("Using MIME type:", mimeType || "(browser default)", {
+        gotSystemAudio,
+        audioTracks: stream.getAudioTracks().length,
       });
+
+      const mediaRecorder = new MediaRecorder(
+        stream,
+        mimeType ? { mimeType, audioBitsPerSecond: 64000 } : { audioBitsPerSecond: 64000 },
+      );
 
       mediaRecorderRef.current = mediaRecorder;
 
@@ -70,9 +110,11 @@ export default function ScreenRecorder({
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
 
-      stream.getVideoTracks()[0].onended = () => {
-        stopRecording();
-      };
+      // If user stops sharing / mic ends, stop recording.
+      const endTrack = stream.getAudioTracks()[0];
+      if (endTrack) {
+        endTrack.onended = () => stopRecording();
+      }
     } catch (err) {
       console.error("Recording error:", err);
       setError(
@@ -114,7 +156,8 @@ export default function ScreenRecorder({
         throw new Error("No recording data. Please try again.");
       }
 
-      const blob = new Blob(chunks, { type: "video/webm" });
+      // Audio-only WebM (Opus) keeps uploads small and avoids server-side ffmpeg on Vercel.
+      const blob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
 
       console.log(`Blob: ${(blob.size / 1024 / 1024).toFixed(2)} MB, ${chunks.length} chunks`);
 
@@ -122,11 +165,9 @@ export default function ScreenRecorder({
         throw new Error("Recording is empty. Please try again.");
       }
 
-      const file = new File(
-        [blob],
-        `recording-${Date.now()}.webm`,
-        { type: "video/webm" }
-      );
+      const file = new File([blob], `recording-${Date.now()}.webm`, {
+        type: blob.type || "audio/webm",
+      });
 
       const formData = new FormData();
       formData.append("file", file);
@@ -186,7 +227,7 @@ export default function ScreenRecorder({
           Transcribing with Whisper...
         </h3>
         <p className="text-sm text-gray-600 text-center max-w-sm">
-          Your recording is being transcribed. This usually takes 30-60 seconds.
+          Uploading audio and transcribing. This usually takes 1060 seconds.
         </p>
       </div>
     );
@@ -194,14 +235,14 @@ export default function ScreenRecorder({
 
   return (
     <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-      <div className="text-6xl mb-4">🎥</div>
+      <div className="text-6xl mb-4">�️</div>
       <h3 className="text-xl font-semibold text-gray-900 mb-2">
-        {isRecording ? "Recording in Progress" : "Record This Lecture"}
+        {isRecording ? "Recording in Progress" : "Record Audio"}
       </h3>
       <p className="text-sm text-gray-600 text-center max-w-md mb-6">
         {isRecording
-          ? "Recording your Zoom window. Stop when you're ready!"
-          : "Record your Zoom meeting to ask AI-powered questions."}
+          ? "Recording audio. Stop when you're ready!"
+          : "Record audio to ask AI-powered questions."}
       </p>
 
       {error && (
@@ -241,7 +282,7 @@ export default function ScreenRecorder({
 
       {!isRecording && !isProcessing && (
         <p className="text-xs text-gray-500 mt-4 text-center max-w-sm">
-          Select your Zoom window and ensure audio is included.
+          You may be asked for microphone permission. If screen-sharing audio is available, it will be used; otherwise well use your mic.
         </p>
       )}
     </div>
