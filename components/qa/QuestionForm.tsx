@@ -35,11 +35,10 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
           <button
             type="button"
             onClick={() => setMode('simple')}
-            className={`p-4 border-2 rounded-lg text-left transition-all ${
-              mode === 'simple'
+            className={`p-4 border-2 rounded-lg text-left transition-all ${mode === 'simple'
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                 : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
-            }`}
+              }`}
           >
             <div className="text-2xl mb-2">💡</div>
             <div className="font-semibold mb-1">Simple Explanation</div>
@@ -51,11 +50,10 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
           <button
             type="button"
             onClick={() => setMode('practice')}
-            className={`p-4 border-2 rounded-lg text-left transition-all ${
-              mode === 'practice'
+            className={`p-4 border-2 rounded-lg text-left transition-all ${mode === 'practice'
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                 : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
-            }`}
+              }`}
           >
             <div className="text-2xl mb-2">📝</div>
             <div className="font-semibold mb-1">Practice Problems</div>
@@ -67,11 +65,10 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
           <button
             type="button"
             onClick={() => setMode('animation')}
-            className={`p-4 border-2 rounded-lg text-left transition-all ${
-              mode === 'animation'
+            className={`p-4 border-2 rounded-lg text-left transition-all ${mode === 'animation'
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                 : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
-            }`}
+              }`}
           >
             <div className="text-2xl mb-2">🎬</div>
             <div className="font-semibold mb-1">Animation</div>
@@ -88,7 +85,7 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
           <label htmlFor="interests" className="block text-sm font-medium mb-2">
             Your Interests (optional)
             <span className="text-xs text-gray-500 ml-2">
-              e.g., "sports, music, cooking"
+              e.g., &quot;sports, music, cooking&quot;
             </span>
           </label>
           <input
@@ -101,7 +98,7 @@ export default function QuestionForm({ onSubmit, loading }: QuestionFormProps) {
             disabled={loading}
           />
           <p className="text-xs text-gray-500 mt-1">
-            We'll use these to create more relatable practice problems
+            We&apos;ll use these to create more relatable practice problems
           </p>
         </div>
       )}

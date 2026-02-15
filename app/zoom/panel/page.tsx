@@ -47,7 +47,7 @@ export default function ZoomPanelPage() {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md">
           <h2 className="text-yellow-800 font-semibold mb-2">Not Configured</h2>
           <p className="text-yellow-700 text-sm">
-            Unable to get Zoom meeting context. Please ensure you're running
+            Unable to get Zoom meeting context. Please ensure you&apos;re running
             this in a Zoom Apps panel.
           </p>
         </div>

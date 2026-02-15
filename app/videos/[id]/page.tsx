@@ -89,7 +89,7 @@ export default async function VideoPage({ params }: PageProps) {
           {isDownloading && (
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                We're currently downloading your video from YouTube. This may take a few minutes
+                We&apos;re currently downloading your video from YouTube. This may take a few minutes
                 depending on the video size.
               </p>
               <p className="text-xs text-gray-500">
@@ -101,7 +101,7 @@ export default async function VideoPage({ params }: PageProps) {
           {isUploaded && (
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                We're currently transcribing your video. This usually takes a few minutes depending
+                We&apos;re currently transcribing your video. This usually takes a few minutes depending
                 on the video length.
               </p>
               <p className="text-xs text-gray-500">

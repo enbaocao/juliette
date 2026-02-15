@@ -91,7 +91,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
             No Active Session
           </h2>
           <p className="text-gray-600">
-            The teacher hasn't started a live session yet. When they do, you'll be able to ask
+            The teacher hasn&apos;t started a live session yet. When they do, you&apos;ll be able to ask
             questions here!
           </p>
         </div>
@@ -131,31 +131,28 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => setMode('simple')}
-              className={`px-3 py-2 text-xs rounded-lg border ${
-                mode === 'simple'
+              className={`px-3 py-2 text-xs rounded-lg border ${mode === 'simple'
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Simple
             </button>
             <button
               onClick={() => setMode('practice')}
-              className={`px-3 py-2 text-xs rounded-lg border ${
-                mode === 'practice'
+              className={`px-3 py-2 text-xs rounded-lg border ${mode === 'practice'
                   ? 'bg-purple-600 text-white border-purple-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Practice
             </button>
             <button
               onClick={() => setMode('animation')}
-              className={`px-3 py-2 text-xs rounded-lg border ${
-                mode === 'animation'
+              className={`px-3 py-2 text-xs rounded-lg border ${mode === 'animation'
                   ? 'bg-green-600 text-white border-green-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Animation
             </button>
@@ -213,13 +210,12 @@ export default function StudentView({ context, session }: StudentViewProps) {
                     Q: {q.question}
                   </p>
                   <span
-                    className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-                      q.mode === 'simple'
+                    className={`ml-2 px-2 py-0.5 text-xs rounded-full ${q.mode === 'simple'
                         ? 'bg-blue-100 text-blue-800'
                         : q.mode === 'practice'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-green-100 text-green-800'
+                      }`}
                   >
                     {q.mode}
                   </span>
