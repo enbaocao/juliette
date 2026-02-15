@@ -13,10 +13,18 @@ export default function ScreenRecorder({
   onRecordingComplete,
   linkToSession = true,
 }: ScreenRecorderProps) {
+  const mediaDevices =
+    typeof navigator !== "undefined" ? navigator.mediaDevices : undefined;
+  const hasGetDisplayMedia =
+    Boolean(mediaDevices) && typeof (mediaDevices as any).getDisplayMedia === "function";
+
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [mode, setMode] = useState<"screen" | "mic">(
+    hasGetDisplayMedia ? "screen" : "mic",
+  );
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -52,16 +60,29 @@ export default function ScreenRecorder({
       setError(null);
       chunksRef.current = [];
 
-      // Screen record (video) BUT upload audio only:
-      // - Request display media to keep the "screen recording" UX (important for Zoom on Windows).
-      // - Record an audio-only stream (smaller upload, Vercel-friendly).
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: true,
-      } as any);
+      const wantsScreen = mode === "screen";
 
-      const displayVideoTrack = displayStream.getVideoTracks()[0] ?? null;
-      const displayAudioTrack = displayStream.getAudioTracks()[0] ?? null;
+      // Screen mode: request display media (video+audio) for the UX, but record/upload audio-only.
+      // Mic mode: record/upload mic audio only (no screen capture attempt).
+      let displayStream: MediaStream | null = null;
+      if (wantsScreen) {
+        if (!hasGetDisplayMedia) {
+          throw new Error(
+            "Screen recording isn’t supported in this Zoom environment. Switch to Mic-only.",
+          );
+        }
+        displayStream = await (mediaDevices as any).getDisplayMedia({
+          video: true,
+          audio: true,
+        } as any);
+      }
+
+      const displayVideoTrack = wantsScreen
+        ? displayStream?.getVideoTracks()[0] ?? null
+        : null;
+      const displayAudioTrack = wantsScreen
+        ? displayStream?.getAudioTracks()[0] ?? null
+        : null;
 
       // If system audio isn't provided from the display stream, fall back to mic.
       let micStream: MediaStream | null = null;
@@ -69,7 +90,11 @@ export default function ScreenRecorder({
 
       if (!displayAudioTrack) {
         try {
-          micStream = await navigator.mediaDevices.getUserMedia({
+          if (!mediaDevices || typeof mediaDevices.getUserMedia !== "function") {
+            throw new Error("Audio capture is not available in this environment.");
+          }
+
+          micStream = await mediaDevices.getUserMedia({
             audio: {
               echoCancellation: true,
               noiseSuppression: true,
@@ -267,7 +292,7 @@ export default function ScreenRecorder({
           Transcribing with Whisper...
         </h3>
         <p className="text-sm text-gray-600 text-center max-w-sm">
-          Uploading audio and transcribing. This usually takes 1060 seconds.
+          Uploading audio and transcribing. This usually takes 10–60 seconds.
         </p>
       </div>
     );
@@ -275,15 +300,70 @@ export default function ScreenRecorder({
 
   return (
     <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-      <div className="text-6xl mb-4">�️</div>
+      <div className="text-6xl mb-4">🎙️</div>
       <h3 className="text-xl font-semibold text-gray-900 mb-2">
-        {isRecording ? "Recording in Progress" : "Screen Record (Audio Only)"}
+        {isRecording
+          ? "Recording in Progress"
+          : mode === "screen"
+            ? "Screen Record (Upload Audio Only)"
+            : "Mic Only (Upload Audio Only)"}
       </h3>
       <p className="text-sm text-gray-600 text-center max-w-md mb-6">
         {isRecording
           ? "Recording your screen plus audio-only upload. Stop when you're ready!"
-          : "We’ll screen-record your Zoom window, but only upload audio for fast transcription."}
+          : mode === "screen"
+            ? "We’ll screen-record your Zoom window, but only upload audio for fast transcription."
+            : "We’ll record from your microphone only (no screen capture) for fast transcription."}
       </p>
+
+      {!isRecording && !isProcessing && (
+        <div className="w-full max-w-md mb-4">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setMode("screen");
+              }}
+              disabled={!hasGetDisplayMedia}
+              className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                mode === "screen"
+                  ? "bg-white border-blue-300 text-blue-800"
+                  : "bg-white/60 border-gray-200 text-gray-700 hover:bg-white"
+              }`}
+              title={
+                hasGetDisplayMedia
+                  ? "Screen-record your Zoom window, upload audio only"
+                  : "Screen recording isn’t available in this Zoom environment"
+              }
+            >
+              Screen
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setMode("mic");
+              }}
+              className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
+                mode === "mic"
+                  ? "bg-white border-blue-300 text-blue-800"
+                  : "bg-white/60 border-gray-200 text-gray-700 hover:bg-white"
+              }`}
+            >
+              Mic-only
+            </button>
+          </div>
+
+          {!hasGetDisplayMedia && (
+            <p className="mt-2 text-[11px] text-gray-600">
+              Screen recording isn’t supported in this Zoom workspace on macOS.
+              Use <span className="font-medium">Mic-only</span>, or run the app
+              inside the Zoom desktop meeting client to enable screen capture.
+            </p>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 max-w-md">
@@ -317,12 +397,18 @@ export default function ScreenRecorder({
             : "bg-blue-600 hover:bg-blue-700 text-white"
         }`}
       >
-        {isRecording ? "⏹ Stop Recording" : "🎬 Start Recording"}
+        {isRecording
+          ? "⏹ Stop Recording"
+          : mode === "screen"
+            ? "🎬 Start Screen Recording"
+            : "🎤 Start Mic Recording"}
       </button>
 
       {!isRecording && !isProcessing && (
         <p className="text-xs text-gray-500 mt-4 text-center max-w-sm">
-          Pick your Zoom window when prompted. If system audio isn’t available, we’ll use your microphone.
+          {mode === "screen"
+            ? "Pick your Zoom window when prompted. If system audio isn’t available, we’ll use your microphone."
+            : "We’ll ask for microphone permission and upload only audio for transcription."}
         </p>
       )}
     </div>
