@@ -8,9 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "worker:transcription": "tsx workers/transcription-worker.ts",
-    "worker:youtube": "tsx workers/youtube-download-worker.ts"
+    "worker:youtube": "tsx workers/youtube-transcript-worker.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
     "@supabase/ssr": "^0.6.0",
     "@supabase/supabase-js": "^2.48.0",
     "@zoom/appssdk": "^0.16.36",
@@ -28,7 +29,8 @@
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "youtube-transcript": "^1.2.1"
   },
   "devDependencies": {
     "@types/node": "^22",

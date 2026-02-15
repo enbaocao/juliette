@@ -68,7 +68,7 @@ export default function ZoomIntegrationPage() {
               <div>
                 <h3 className="font-semibold mb-1">Students Open Juliette Panel</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Students click the "Apps" button in Zoom and select Juliette
+                  Students click the &quot;Apps&quot; button in Zoom and select Juliette
                 </p>
               </div>
             </div>
@@ -118,9 +118,9 @@ export default function ZoomIntegrationPage() {
             <div>
               <h3 className="font-semibold mb-2">For Students:</h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li>Join your teacher's Zoom meeting</li>
-                <li>Click the "Apps" button at the bottom of the Zoom window</li>
-                <li>Search for "Juliette" and open it</li>
+                <li>Join your teacher&apos;s Zoom meeting</li>
+                <li>Click the &quot;Apps&quot; button at the bottom of the Zoom window</li>
+                <li>Search for &quot;Juliette&quot; and open it</li>
                 <li>Select the relevant video and start asking questions!</li>
               </ol>
             </div>

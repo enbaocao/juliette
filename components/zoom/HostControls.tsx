@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { ZoomMeetingContext } from '@/hooks/useZoomApp';
-import { LiveSession, Video } from '@/lib/types';
+import { useState, useEffect } from "react";
+import { ZoomMeetingContext } from "@/hooks/useZoomApp";
+import { LiveSession, Video } from "@/lib/types";
 
 interface HostControlsProps {
   context: ZoomMeetingContext;
@@ -18,25 +18,29 @@ export default function HostControls({
   onSessionEnded,
 }: HostControlsProps) {
   const [videos, setVideos] = useState<Video[]>([]);
-  const [selectedVideoId, setSelectedVideoId] = useState<string>('');
-  const [sessionTitle, setSessionTitle] = useState('');
+  const [selectedVideoId, setSelectedVideoId] = useState<string>("");
+  const [sessionTitle, setSessionTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [transcriptionStatus, setTranscriptionStatus] = useState<'idle' | 'connecting' | 'streaming' | 'error'>('idle');
+  const [transcriptionStatus, setTranscriptionStatus] = useState<
+    "idle" | "connecting" | "streaming" | "error"
+  >("idle");
   const [isStartingTranscription, setIsStartingTranscription] = useState(false);
 
   // Load available videos
   useEffect(() => {
     const loadVideos = async () => {
       try {
-        const response = await fetch('/api/videos');
+        const response = await fetch("/api/videos");
         if (response.ok) {
           const data = await response.json();
-          setVideos(data.videos.filter((v: Video) => v.status === 'transcribed'));
+          setVideos(
+            data.videos.filter((v: Video) => v.status === "transcribed"),
+          );
         }
       } catch (err) {
-        console.error('Error loading videos:', err);
+        console.error("Error loading videos:", err);
       }
     };
 
@@ -49,13 +53,15 @@ export default function HostControls({
 
     const checkTranscriptionStatus = async () => {
       try {
-        const response = await fetch(`/api/rtms/status?session_id=${session.id}`);
+        const response = await fetch(
+          `/api/rtms/status?session_id=${session.id}`,
+        );
         if (response.ok) {
           const data = await response.json();
-          setTranscriptionStatus(data.rtms_status || 'idle');
+          setTranscriptionStatus(data.rtms_status || "idle");
         }
       } catch (err) {
-        console.error('Error checking transcription status:', err);
+        console.error("Error checking transcription status:", err);
       }
     };
 
@@ -66,7 +72,7 @@ export default function HostControls({
 
   const handleStartSession = async () => {
     if (!selectedVideoId && !sessionTitle) {
-      setError('Please select a video or enter a session title');
+      setError("Please select a video or enter a session title");
       return;
     }
 
@@ -74,9 +80,9 @@ export default function HostControls({
     setError(null);
 
     try {
-      const response = await fetch('/api/live-sessions/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/live-sessions/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           meeting_uuid: context.meetingUUID,
           meeting_number: context.meetingNumber,
@@ -86,13 +92,13 @@ export default function HostControls({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to start session');
+        throw new Error("Failed to start session");
       }
 
       const data = await response.json();
       onSessionCreated(data.session);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start session');
+      setError(err instanceof Error ? err.message : "Failed to start session");
     } finally {
       setIsCreating(false);
     }
@@ -106,25 +112,25 @@ export default function HostControls({
 
     try {
       // Stop transcription first if active
-      if (transcriptionStatus === 'streaming') {
+      if (transcriptionStatus === "streaming") {
         await handleStopTranscription();
       }
 
-      const response = await fetch('/api/live-sessions/end', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/live-sessions/end", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           session_id: session.id,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to end session');
+        throw new Error("Failed to end session");
       }
 
       onSessionEnded();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to end session');
+      setError(err instanceof Error ? err.message : "Failed to end session");
     } finally {
       setIsEnding(false);
     }
@@ -138,22 +144,26 @@ export default function HostControls({
 
     try {
       // Start bot transcription for this session
-      const response = await fetch('/api/rtms/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/rtms/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           session_id: session.id,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to start bot transcription');
+        throw new Error("Failed to start bot transcription");
       }
 
-      setTranscriptionStatus('connecting');
+      setTranscriptionStatus("connecting");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start bot transcription');
-      setTranscriptionStatus('error');
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to start bot transcription",
+      );
+      setTranscriptionStatus("error");
     } finally {
       setIsStartingTranscription(false);
     }
@@ -163,21 +173,23 @@ export default function HostControls({
     if (!session) return;
 
     try {
-      const response = await fetch('/api/rtms/stop', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/rtms/stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           session_id: session.id,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to stop transcription');
+        throw new Error("Failed to stop transcription");
       }
 
-      setTranscriptionStatus('idle');
+      setTranscriptionStatus("idle");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to stop transcription');
+      setError(
+        err instanceof Error ? err.message : "Failed to stop transcription",
+      );
     }
   };
 
@@ -193,7 +205,7 @@ export default function HostControls({
               disabled={isEnding}
               className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
             >
-              {isEnding ? 'Ending...' : 'End Session'}
+              {isEnding ? "Ending..." : "End Session"}
             </button>
           </div>
           {session.title && (
@@ -214,29 +226,33 @@ export default function HostControls({
 
         {/* Live Transcription Controls */}
         <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-          <h3 className="font-semibold text-[#1a1a1a] mb-2">🎙️ Live Transcription</h3>
+          <h3 className="font-semibold text-[#1a1a1a] mb-2">
+            🎙️ Live Transcription
+          </h3>
           <p className="text-sm text-gray-700 mb-3">
             Enable real-time meeting transcription for better AI context
           </p>
 
-          {transcriptionStatus === 'idle' && (
+          {transcriptionStatus === "idle" && (
             <button
               onClick={handleStartTranscription}
               disabled={isStartingTranscription}
               className="w-full px-4 py-2 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] disabled:opacity-50 transition-colors shadow-sm"
             >
-              {isStartingTranscription ? 'Starting...' : 'Start Live Transcription'}
+              {isStartingTranscription
+                ? "Starting..."
+                : "Start Live Transcription"}
             </button>
           )}
 
-          {transcriptionStatus === 'connecting' && (
+          {transcriptionStatus === "connecting" && (
             <div className="flex items-center justify-center py-2 text-sm text-gray-600">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#ffc8dd] mr-2"></div>
               Connecting to audio stream...
             </div>
           )}
 
-          {transcriptionStatus === 'streaming' && (
+          {transcriptionStatus === "streaming" && (
             <div>
               <div className="flex items-center mb-2 text-sm text-green-600">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
@@ -251,7 +267,7 @@ export default function HostControls({
             </div>
           )}
 
-          {transcriptionStatus === 'error' && (
+          {transcriptionStatus === "error" && (
             <div className="text-sm text-red-600">
               ⚠️ Transcription error. Please try again.
             </div>
@@ -260,7 +276,9 @@ export default function HostControls({
 
         {/* Question Dashboard Link */}
         <div className="bg-[#ffe5ec] border border-[#ffc2d1] rounded-xl p-4">
-          <h3 className="font-semibold text-[#1a1a1a] mb-2">Teacher Dashboard</h3>
+          <h3 className="font-semibold text-[#1a1a1a] mb-2">
+            Teacher Dashboard
+          </h3>
           <p className="text-sm text-gray-700 mb-3">
             View all student questions and AI responses in real-time
           </p>
@@ -292,7 +310,9 @@ export default function HostControls({
   return (
     <div className="p-4 space-y-4">
       <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-        <h2 className="font-semibold text-[#1a1a1a] mb-4">Start Live Session</h2>
+        <h2 className="font-semibold text-[#1a1a1a] mb-4">
+          Start Live Session
+        </h2>
 
         {/* Session Title */}
         <div className="mb-4">
@@ -332,7 +352,8 @@ export default function HostControls({
             </select>
           )}
           <p className="text-xs text-gray-500 mt-1">
-            Linking a video allows AI to reference lecture content when answering
+            Linking a video allows AI to reference lecture content when
+            answering
           </p>
         </div>
 
@@ -347,7 +368,7 @@ export default function HostControls({
           disabled={isCreating}
           className="w-full px-4 py-3 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
-          {isCreating ? 'Starting...' : 'Start Session'}
+          {isCreating ? "Starting..." : "Start Session"}
         </button>
       </div>
 
@@ -355,8 +376,8 @@ export default function HostControls({
       <div className="bg-[#ffe5ec] border border-[#ffc2d1] rounded-xl p-4">
         <h3 className="font-semibold text-[#1a1a1a] mb-2">💡 Tip</h3>
         <p className="text-sm text-gray-700">
-          Start a session to enable students to ask questions. They'll get instant AI-powered
-          explanations during class!
+          Start a session to enable students to ask questions. They'll get
+          instant AI-powered explanations during class!
         </p>
       </div>
     </div>
