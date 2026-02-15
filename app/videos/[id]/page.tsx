@@ -73,7 +73,7 @@ export default async function VideoPage({ params }: PageProps) {
               <>
                 <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
                 <span className="font-semibold text-blue-600 dark:text-blue-400">
-                  Downloading from YouTube
+                  Fetching Transcript
                 </span>
               </>
             ) : (
@@ -89,11 +89,10 @@ export default async function VideoPage({ params }: PageProps) {
           {isDownloading && (
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                We&apos;re currently downloading your video from YouTube. This may take a few minutes
-                depending on the video size.
+                We&apos;re currently fetching the transcript from YouTube. This usually takes just a few seconds.
               </p>
               <p className="text-xs text-gray-500">
-                Once downloaded, the video will be automatically transcribed.
+                This page will automatically update when the transcript is ready.
               </p>
             </div>
           )}
@@ -172,7 +171,7 @@ export default async function VideoPage({ params }: PageProps) {
             </svg>
             <p className="text-gray-600 dark:text-gray-400">
               {isDownloading
-                ? 'Downloading from YouTube... This may take a few minutes'
+                ? 'Fetching transcript from YouTube...'
                 : 'Transcription in progress... Check back in a few minutes'}
             </p>
           </div>
