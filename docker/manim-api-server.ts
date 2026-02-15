@@ -113,7 +113,7 @@ app.post('/generate', async (req: Request, res: Response) => {
     let usedFallback = false;
 
     try {
-      console.log('🤖 Generating Manim code with Claude Opus 4.6...');
+      console.log('🤖 Generating Manim code with Claude Haiku 4.5...');
       manimCode = await generateManimCode({
         context: limitedContext,
         duration,
@@ -130,7 +130,7 @@ app.post('/generate', async (req: Request, res: Response) => {
     // Step 2: Execute Manim code to generate video
     console.log('🎥 Rendering animation with Manim...');
     const outputName = `animation_${Date.now()}`;
-    const result = await executeManimCode(manimCode, outputName, 'medium');
+    const result = await executeManimCode(manimCode, outputName, 'low'); // Use 'low' quality for 3x faster rendering
 
     if (!result.success) {
       console.error('❌ Animation rendering failed');

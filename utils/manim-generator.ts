@@ -66,6 +66,11 @@ class GeneratedScene(Scene):
    - Ensure mathematical accuracy
    - Keep code clean and well-organized
 
+6.5. **PERFORMANCE OPTIMIZATION**:
+   - Keep animations efficient
+   - Avoid complex nested loops or excessive calculations
+   - Use low-res rendering techniques if necessary (e.g., fewer points in plots)
+
 7. **OUTPUT FORMAT**:
    - Return ONLY Python code
    - NO markdown code blocks (\`\`\`), NO explanations, NO comments outside the code
@@ -107,7 +112,7 @@ Return ONLY the Python code, no markdown formatting:`;
 
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-opus-4-6', // Upgraded to latest and most capable model
+      model: 'claude-haiku-4-5-20251001', // Haiku 4.5: 3x faster, 20x cheaper, still excellent code quality
       max_tokens: 4096,
       temperature: 0.7, // Lower temperature for more consistent, focused output
       system: systemPrompt,
