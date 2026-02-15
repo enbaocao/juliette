@@ -13,7 +13,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 ];
 
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: (origin: string | undefined, callback) => {
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
 
@@ -113,7 +113,7 @@ app.post('/generate', async (req: Request, res: Response) => {
     let usedFallback = false;
 
     try {
-      console.log('🤖 Generating Manim code with Claude Haiku 4.5...');
+      console.log('🤖 Generating Manim code with Claude Opus 4.6...');
       manimCode = await generateManimCode({
         context: limitedContext,
         duration,
