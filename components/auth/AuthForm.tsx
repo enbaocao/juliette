@@ -17,9 +17,22 @@ export default function AuthForm({ disabled = false }: AuthFormProps) {
   const next = searchParams.get('next') ?? '/upload';
   const supabase = createClient();
 
+  const getBaseUrl = () => {
+    const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+    if (configured) {
+      return configured.replace(/\/+$/, '');
+    }
+    return window.location.origin;
+  };
+
+  const getSafeNextPath = () => {
+    if (!next.startsWith('/')) return '/upload';
+    return next;
+  };
+
   const getRedirectUrl = () => {
-    const url = new URL('/auth/callback', window.location.origin);
-    url.searchParams.set('next', next);
+    const url = new URL('/auth/callback', getBaseUrl());
+    url.searchParams.set('next', getSafeNextPath());
     return url.toString();
   };
 
