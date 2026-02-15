@@ -7,11 +7,14 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { openai } from '@/lib/openai';
 import { Job } from '@/lib/types';
+import { createFileLogger } from '@/lib/file-logger';
 import * as fs from 'fs';
 import * as os from 'os';
 
 const POLLING_INTERVAL = 5000; // 5 seconds
 const CHUNK_DURATION = 60; // 60 seconds per chunk
+const logger = createFileLogger('transcription-worker');
+let lastIdleLogAt = 0;
 
 async function downloadVideo(storagePath: string): Promise<string> {
   const { data, error } = await supabaseAdmin.storage
@@ -49,7 +52,7 @@ async function transcribeVideo(filePath: string): Promise<{ text: string; durati
       duration: (transcription as any).duration,
     };
   } catch (error) {
-    console.error('Transcription error:', error);
+    logger.error('Transcription error:', error);
     throw error;
   }
 }
@@ -103,7 +106,7 @@ async function processTranscriptionJob(job: Job): Promise<void> {
     throw new Error('Missing video_id or storage_path in job payload');
   }
 
-  console.log(`Processing transcription job ${job.id} for video ${video_id}`);
+  logger.info(`Processing transcription job ${job.id} for video ${video_id}`);
 
   // Update job status to processing
   await supabaseAdmin
@@ -115,11 +118,11 @@ async function processTranscriptionJob(job: Job): Promise<void> {
 
   try {
     // Download video
-    console.log('Downloading video...');
+    logger.info('Downloading video...');
     tempFile = await downloadVideo(storage_path);
 
     // Transcribe
-    console.log('Transcribing video...');
+    logger.info('Transcribing video...');
     const transcription = await openai.audio.transcriptions.create({
       file: fs.createReadStream(tempFile),
       model: 'whisper-1',
@@ -128,11 +131,11 @@ async function processTranscriptionJob(job: Job): Promise<void> {
     });
 
     const segments = (transcription as any).segments || [];
-    console.log(`Transcribed ${segments.length} segments`);
+    logger.info(`Transcribed ${segments.length} segments`);
 
     // Chunk the transcript
     const chunks = chunkTranscript(segments, CHUNK_DURATION);
-    console.log(`Created ${chunks.length} chunks`);
+    logger.info(`Created ${chunks.length} chunks`);
 
     // Insert chunks into database
     const chunksToInsert = chunks.map((chunk) => ({
@@ -165,9 +168,9 @@ async function processTranscriptionJob(job: Job): Promise<void> {
       })
       .eq('id', job.id);
 
-    console.log(`✓ Transcription job ${job.id} completed successfully`);
+    logger.info(`✓ Transcription job ${job.id} completed successfully`);
   } catch (error) {
-    console.error(`✗ Transcription job ${job.id} failed:`, error);
+    logger.error(`✗ Transcription job ${job.id} failed:`, error);
 
     // Mark job as failed
     await supabaseAdmin
@@ -200,23 +203,30 @@ async function pollJobs(): Promise<void> {
       .limit(1);
 
     if (error) {
-      console.error('Error fetching jobs:', error);
+      logger.error('Error fetching jobs:', error);
       return;
     }
 
     if (jobs && jobs.length > 0) {
       const job = jobs[0] as Job;
       await processTranscriptionJob(job);
+    } else {
+      const now = Date.now();
+      if (now - lastIdleLogAt >= 60000) {
+        logger.info('No pending transcription jobs.');
+        lastIdleLogAt = now;
+      }
     }
   } catch (error) {
-    console.error('Error in poll cycle:', error);
+    logger.error('Error in poll cycle:', error);
   }
 }
 
 // Main worker loop
 export async function startTranscriptionWorker(): Promise<void> {
-  console.log('🎬 Transcription worker started');
-  console.log(`Polling every ${POLLING_INTERVAL}ms for new jobs...`);
+  logger.info('🎬 Transcription worker started');
+  logger.info(`Polling every ${POLLING_INTERVAL}ms for new jobs...`);
+  logger.info(`Writing logs to ${logger.filePath}`);
 
   // Initial poll
   await pollJobs();
@@ -230,7 +240,7 @@ export async function startTranscriptionWorker(): Promise<void> {
 // For standalone execution
 if (require.main === module) {
   startTranscriptionWorker().catch((error) => {
-    console.error('Worker crashed:', error);
+    logger.error('Worker crashed:', error);
     process.exit(1);
   });
 }

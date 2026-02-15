@@ -303,7 +303,7 @@ export default function VideoUpload() {
                 required
               />
               <p className="mt-2 text-sm text-gray-500">
-                Paste a YouTube video link to download and transcribe it
+                Paste a YouTube video link. We use captions when available, otherwise fallback to audio transcription.
               </p>
             </div>
           </div>
@@ -339,10 +339,10 @@ export default function VideoUpload() {
           {uploading
             ? mode === 'file'
               ? 'Uploading...'
-              : 'Adding Video...'
+              : 'Processing YouTube Video...'
             : mode === 'file'
               ? 'Upload Video'
-              : 'Add YouTube Video'}
+              : 'Add YouTube Link'}
         </button>
       </form>
     </div>

@@ -1,5 +1,10 @@
 'use client';
 
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+
 interface Reference {
   start_sec: number;
   end_sec: number;
@@ -25,13 +30,30 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+function normalizeMathDelimiters(content: string): string {
+  return content
+    .replace(/```math\s*([\s\S]*?)```/g, (_, expr) => `\n$$\n${expr.trim()}\n$$\n`)
+    .replace(/\\\[((?:.|\n)*?)\\\]/g, (_, expr) => `\n$$\n${expr.trim()}\n$$\n`)
+    .replace(/\\\((.*?)\\\)/g, (_, expr) => `$${expr.trim()}$`);
+}
+
 export default function AnswerDisplay({ answer, mode }: AnswerDisplayProps) {
+  const renderedContent = normalizeMathDelimiters(answer.content || '');
+
   return (
     <div className="space-y-6">
       {/* Answer Content */}
       <div className="prose dark:prose-invert max-w-none">
         <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border">
-          <div className="whitespace-pre-wrap">{answer.content}</div>
+          <ReactMarkdown
+            remarkPlugins={[remarkMath]}
+            rehypePlugins={[rehypeKatex]}
+            components={{
+              p: ({ children }) => <p className="whitespace-pre-wrap">{children}</p>,
+            }}
+          >
+            {renderedContent}
+          </ReactMarkdown>
         </div>
       </div>
 

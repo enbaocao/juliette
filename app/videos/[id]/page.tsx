@@ -2,6 +2,9 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import StatusAutoRefresh from '@/components/videos/StatusAutoRefresh';
+
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -44,6 +47,7 @@ export default async function VideoPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen p-8">
+      <StatusAutoRefresh enabled={isProcessing} />
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -89,7 +93,7 @@ export default async function VideoPage({ params }: PageProps) {
           {isDownloading && (
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                We&apos;re currently fetching the transcript from YouTube. This usually takes just a few seconds.
+                We&apos;re processing this YouTube video. If captions are unavailable, we&apos;ll automatically run audio transcription, which can take a few minutes.
               </p>
               <p className="text-xs text-gray-500">
                 This page will automatically update when the transcript is ready.
@@ -171,7 +175,7 @@ export default async function VideoPage({ params }: PageProps) {
             </svg>
             <p className="text-gray-600 dark:text-gray-400">
               {isDownloading
-                ? 'Fetching transcript from YouTube...'
+                ? 'Processing YouTube video and preparing transcript...'
                 : 'Transcription in progress... Check back in a few minutes'}
             </p>
           </div>

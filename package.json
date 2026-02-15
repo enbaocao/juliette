@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "worker:transcription": "tsx workers/transcription-worker.ts",
-    "worker:youtube": "tsx workers/youtube-transcript-worker.ts"
+    "worker:youtube": "tsx workers/youtube-transcript-worker.ts",
+    "worker:youtube-download": "tsx workers/youtube-download-worker.ts",
+    "logs:youtube-download": "tail -n 200 -f logs/youtube-download-worker.log",
+    "logs:transcription": "tail -n 200 -f logs/transcription-worker.log"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",

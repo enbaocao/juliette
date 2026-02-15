@@ -10,11 +10,11 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { createFileLogger } from '../lib/file-logger';
 
-// Create Supabase client after env vars are loaded
 const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   {
     auth: {
       autoRefreshToken: false,
@@ -24,216 +24,254 @@ const supabaseAdmin = createClient(
 );
 
 const execFileAsync = promisify(execFile);
-const POLLING_INTERVAL = 5000; // 5 seconds
-const DOWNLOAD_TIMEOUT = 600000; // 10 minutes
-const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+const POLLING_INTERVAL = 5000;
+const JOB_TIMEOUT = 180000;
+const CHUNK_DURATION = 60;
+const logger = createFileLogger('youtube-download-worker');
+let lastIdleLogAt = 0;
 
 interface VideoMetadata {
   title: string;
-  duration: number;
-  filesize?: number;
+}
+
+interface SubtitleSegment {
+  start: number;
+  end: number;
+  text: string;
 }
 
 async function getVideoMetadata(youtubeUrl: string): Promise<VideoMetadata> {
-  try {
-    const { stdout } = await execFileAsync(
-      'yt-dlp',
-      [
-        '--print', '%(title)s',
-        '--print', '%(duration)s',
-        '--print', '%(filesize,filesize_approx)s',
-        '--no-warnings',
-        youtubeUrl,
-      ],
-      { timeout: 30000 }
-    );
+  const { stdout } = await execFileAsync(
+    'yt-dlp',
+    [
+      '--print', '%(title)s',
+      '--no-warnings',
+      youtubeUrl,
+    ],
+    { timeout: 30000 }
+  );
 
-    const lines = stdout.trim().split('\n');
-    const title = lines[0] || 'Untitled Video';
-    const duration = parseFloat(lines[1]) || 0;
-    const filesize = lines[2] !== 'NA' ? parseFloat(lines[2]) : undefined;
-
-    return { title, duration, filesize };
-  } catch (error) {
-    console.error('Failed to fetch video metadata:', error);
-    throw new Error('Failed to fetch video metadata. The video may be private or unavailable.');
-  }
+  return {
+    title: stdout.trim().split('\n')[0] || 'YouTube Video',
+  };
 }
 
-async function downloadYouTubeVideo(
-  youtubeUrl: string,
-  videoId: string
-): Promise<{ filePath: string; metadata: VideoMetadata }> {
+function parseVttTimestamp(timestamp: string): number {
+  const cleaned = timestamp.trim().replace(',', '.');
+  const parts = cleaned.split(':').map(Number);
+
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+
+  return Number(cleaned) || 0;
+}
+
+function stripVttTags(text: string): string {
+  return text
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function parseVtt(content: string): SubtitleSegment[] {
+  const lines = content.split(/\r?\n/);
+  const segments: SubtitleSegment[] = [];
+
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+
+    if (!line || line === 'WEBVTT' || line.startsWith('NOTE') || line.startsWith('STYLE')) {
+      i++;
+      continue;
+    }
+
+    if (/^\d+$/.test(line) && i + 1 < lines.length && lines[i + 1].includes('-->')) {
+      i++;
+    }
+
+    if (!lines[i] || !lines[i].includes('-->')) {
+      i++;
+      continue;
+    }
+
+    const timing = lines[i].split('-->');
+    const start = parseVttTimestamp(timing[0]);
+    const end = parseVttTimestamp((timing[1] || '').trim().split(' ')[0]);
+    i++;
+
+    const textLines: string[] = [];
+    while (i < lines.length && lines[i].trim() !== '') {
+      textLines.push(lines[i]);
+      i++;
+    }
+
+    const text = stripVttTags(textLines.join(' '));
+    if (text) {
+      const prev = segments[segments.length - 1];
+      if (prev && prev.start === start && prev.end === end && prev.text === text) {
+        continue;
+      }
+      segments.push({ start, end, text });
+    }
+  }
+
+  return segments;
+}
+
+async function downloadSubtitleFile(youtubeUrl: string, videoId: string): Promise<string> {
   const tempDir = os.tmpdir();
-  const outputPath = path.join(tempDir, `youtube-${videoId}-${Date.now()}.mp4`);
+  const baseName = `yt-sub-${videoId}-${Date.now()}`;
+  const outputTemplate = path.join(tempDir, `${baseName}.%(ext)s`);
 
-  try {
-    console.log(`Downloading YouTube video: ${youtubeUrl}`);
+  await execFileAsync(
+    'yt-dlp',
+    [
+      '--skip-download',
+      '--write-subs',
+      '--write-auto-subs',
+      '--sub-langs', 'en.*,en',
+      '--sub-format', 'vtt',
+      '--no-warnings',
+      '-o', outputTemplate,
+      youtubeUrl,
+    ],
+    { timeout: JOB_TIMEOUT }
+  );
 
-    // Get metadata first to check file size
-    const metadata = await getVideoMetadata(youtubeUrl);
+  const candidates = fs
+    .readdirSync(tempDir)
+    .filter((name) => name.startsWith(baseName) && name.endsWith('.vtt'))
+    .map((name) => path.join(tempDir, name));
 
-    if (metadata.filesize && metadata.filesize > MAX_FILE_SIZE) {
-      throw new Error(`Video file size (${Math.round(metadata.filesize / 1024 / 1024)}MB) exceeds 500MB limit`);
-    }
-
-    // Download the video
-    // Format: 480p or lower to keep file size manageable for Supabase Storage
-    // This ensures videos stay under typical storage limits (~50MB)
-    const { stderr } = await execFileAsync(
-      'yt-dlp',
-      [
-        '-f', 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]/best[height<=360]',
-        '--merge-output-format', 'mp4',
-        '-o', outputPath,
-        '--no-warnings',
-        youtubeUrl,
-      ],
-      {
-        timeout: DOWNLOAD_TIMEOUT,
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer for stderr
-      }
-    );
-
-    // Check if file was created and verify size
-    if (!fs.existsSync(outputPath)) {
-      throw new Error('Video download failed - file not created');
-    }
-
-    const stats = fs.statSync(outputPath);
-    if (stats.size > MAX_FILE_SIZE) {
-      fs.unlinkSync(outputPath);
-      throw new Error(`Downloaded video (${Math.round(stats.size / 1024 / 1024)}MB) exceeds 500MB limit`);
-    }
-
-    console.log(`✓ Downloaded video: ${stats.size} bytes`);
-    return { filePath: outputPath, metadata };
-  } catch (error) {
-    // Clean up temp file if it exists
-    if (fs.existsSync(outputPath)) {
-      fs.unlinkSync(outputPath);
-    }
-
-    if (error instanceof Error) {
-      if (error.message.includes('timeout')) {
-        throw new Error('Video download timed out (10 minute limit exceeded)');
-      }
-      if (error.message.includes('private') || error.message.includes('unavailable')) {
-        throw new Error('Video is private or unavailable');
-      }
-    }
-
-    throw error;
+  if (candidates.length === 0) {
+    throw new Error('No subtitle tracks available for this video.');
   }
+
+  return candidates[0];
 }
 
-async function uploadToStorage(
-  filePath: string,
-  userId: string,
-  videoId: string
-): Promise<string> {
-  const fileName = `${videoId}.mp4`;
-  const storagePath = `${userId}/${fileName}`;
+function chunkTranscript(
+  segments: SubtitleSegment[],
+  chunkDuration: number = CHUNK_DURATION
+): Array<{ start_sec: number; end_sec: number; text: string }> {
+  const chunks: Array<{ start_sec: number; end_sec: number; text: string }> = [];
+  let currentChunk = {
+    start_sec: 0,
+    end_sec: 0,
+    text: '',
+  };
 
-  console.log(`Uploading to Supabase Storage: videos/${storagePath}`);
+  for (const segment of segments) {
+    if (!segment.text.trim()) continue;
 
-  const fileBuffer = fs.readFileSync(filePath);
-
-  const { error: uploadError } = await supabaseAdmin.storage
-    .from('videos')
-    .upload(storagePath, fileBuffer, {
-      contentType: 'video/mp4',
-      upsert: false,
-    });
-
-  if (uploadError) {
-    throw new Error(`Failed to upload to storage: ${uploadError.message}`);
+    if (currentChunk.text && segment.end - currentChunk.start_sec > chunkDuration) {
+      chunks.push({ ...currentChunk });
+      currentChunk = {
+        start_sec: segment.start,
+        end_sec: segment.end,
+        text: segment.text.trim(),
+      };
+    } else {
+      if (!currentChunk.text) {
+        currentChunk.start_sec = segment.start;
+      }
+      currentChunk.end_sec = segment.end;
+      currentChunk.text += (currentChunk.text ? ' ' : '') + segment.text.trim();
+    }
   }
 
-  console.log(`✓ Uploaded to storage: videos/${storagePath}`);
-  return storagePath;
+  if (currentChunk.text) {
+    chunks.push(currentChunk);
+  }
+
+  return chunks;
 }
 
 async function processDownloadJob(job: Job): Promise<void> {
-  const { video_id, youtube_url, user_id } = job.payload;
+  const { video_id, youtube_url } = job.payload;
 
-  if (!video_id || !youtube_url || !user_id) {
-    throw new Error('Missing video_id, youtube_url, or user_id in job payload');
+  if (!video_id || !youtube_url) {
+    throw new Error('Missing video_id or youtube_url in job payload');
   }
 
-  console.log(`Processing download job ${job.id} for video ${video_id}`);
+  logger.info(`Processing subtitle job ${job.id} for video ${video_id}`);
 
-  // Update job status to processing
   await supabaseAdmin
     .from('jobs')
     .update({ status: 'processing', updated_at: new Date().toISOString() })
     .eq('id', job.id);
 
-  // Update video status to downloading
   await supabaseAdmin
     .from('videos')
     .update({ status: 'downloading' })
     .eq('id', video_id);
 
-  let tempFile: string | null = null;
+  let subtitlePath: string | null = null;
 
   try {
-    // Download video from YouTube
-    const { filePath, metadata } = await downloadYouTubeVideo(youtube_url, video_id);
-    tempFile = filePath;
+    const metadata = await getVideoMetadata(youtube_url);
+    subtitlePath = await downloadSubtitleFile(youtube_url, video_id);
+    const subtitleContent = fs.readFileSync(subtitlePath, 'utf-8');
 
-    // Upload to Supabase Storage
-    const storagePath = await uploadToStorage(filePath, user_id, video_id);
+    const segments = parseVtt(subtitleContent);
+    const chunks = chunkTranscript(segments);
 
-    // Update video record with storage path and status
+    if (chunks.length === 0) {
+      throw new Error('Subtitle file was found but no transcript chunks were parsed.');
+    }
+
+    const { error: chunksError } = await supabaseAdmin
+      .from('transcript_chunks')
+      .insert(
+        chunks.map((chunk) => ({
+          video_id,
+          start_sec: chunk.start_sec,
+          end_sec: chunk.end_sec,
+          text: chunk.text,
+        }))
+      );
+
+    if (chunksError) {
+      throw new Error(`Failed to insert transcript chunks: ${chunksError.message}`);
+    }
+
     await supabaseAdmin
       .from('videos')
       .update({
-        storage_path: storagePath,
-        status: 'uploaded',
+        storage_path: null,
+        status: 'transcribed',
         title: metadata.title,
       })
       .eq('id', video_id);
 
-    // Create transcription job
-    const { error: transcribeJobError } = await supabaseAdmin
-      .from('jobs')
-      .insert({
-        type: 'transcribe',
-        payload: {
-          video_id,
-          storage_path: storagePath,
-        },
-        status: 'pending',
-      });
-
-    if (transcribeJobError) {
-      throw new Error(`Failed to create transcription job: ${transcribeJobError.message}`);
-    }
-
-    console.log(`✓ Created transcription job for video ${video_id}`);
-
-    // Mark download job as completed
     await supabaseAdmin
       .from('jobs')
       .update({
         status: 'completed',
-        result_path: storagePath,
+        result_path: null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', job.id);
 
-    console.log(`✓ Download job ${job.id} completed successfully`);
+    logger.info(`✓ Subtitle job ${job.id} completed successfully`);
   } catch (error) {
-    console.error(`✗ Download job ${job.id} failed:`, error);
+    logger.error(`✗ Subtitle job ${job.id} failed:`, error);
 
-    // Mark video as failed (keep as uploaded status but with error in job)
     await supabaseAdmin
       .from('videos')
       .update({ status: 'uploaded' })
       .eq('id', video_id);
 
-    // Mark job as failed
     await supabaseAdmin
       .from('jobs')
       .update({
@@ -245,17 +283,15 @@ async function processDownloadJob(job: Job): Promise<void> {
 
     throw error;
   } finally {
-    // Clean up temp file
-    if (tempFile && fs.existsSync(tempFile)) {
-      fs.unlinkSync(tempFile);
-      console.log(`✓ Cleaned up temp file: ${tempFile}`);
+    if (subtitlePath && fs.existsSync(subtitlePath)) {
+      fs.unlinkSync(subtitlePath);
+      logger.info(`✓ Cleaned up subtitle file: ${subtitlePath}`);
     }
   }
 }
 
 async function pollJobs(): Promise<void> {
   try {
-    // Fetch pending download jobs
     const { data: jobs, error } = await supabaseAdmin
       .from('jobs')
       .select('*')
@@ -265,37 +301,39 @@ async function pollJobs(): Promise<void> {
       .limit(1);
 
     if (error) {
-      console.error('Error fetching jobs:', error);
+      logger.error('Error fetching jobs:', error);
       return;
     }
 
     if (jobs && jobs.length > 0) {
-      const job = jobs[0] as Job;
-      await processDownloadJob(job);
+      await processDownloadJob(jobs[0] as Job);
+    } else {
+      const now = Date.now();
+      if (now - lastIdleLogAt >= 60000) {
+        logger.info('No pending download jobs.');
+        lastIdleLogAt = now;
+      }
     }
   } catch (error) {
-    console.error('Error in poll cycle:', error);
+    logger.error('Error in poll cycle:', error);
   }
 }
 
-// Main worker loop
 export async function startYouTubeDownloadWorker(): Promise<void> {
-  console.log('📥 YouTube download worker started');
-  console.log(`Polling every ${POLLING_INTERVAL}ms for new download jobs...`);
+  logger.info('📝 YouTube subtitle worker started');
+  logger.info(`Polling every ${POLLING_INTERVAL}ms for subtitle jobs...`);
+  logger.info(`Writing logs to ${logger.filePath}`);
 
-  // Initial poll
   await pollJobs();
 
-  // Set up polling interval
   setInterval(async () => {
     await pollJobs();
   }, POLLING_INTERVAL);
 }
 
-// For standalone execution
 if (require.main === module) {
   startYouTubeDownloadWorker().catch((error) => {
-    console.error('Worker crashed:', error);
+    logger.error('Worker crashed:', error);
     process.exit(1);
   });
 }
