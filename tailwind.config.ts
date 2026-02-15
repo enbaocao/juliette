@@ -8,6 +8,16 @@ export default {
   ],
   theme: {
     extend: {
+      keyframes: {
+        indeterminate: {
+          '0%': { transform: 'translateX(-100%)', width: '40%' },
+          '50%': { transform: 'translateX(60%)', width: '60%' },
+          '100%': { transform: 'translateX(200%)', width: '40%' },
+        },
+      },
+      animation: {
+        indeterminate: 'indeterminate 1.5s ease-in-out infinite',
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",

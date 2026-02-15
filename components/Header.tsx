@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
-import SignOutButton from '@/components/auth/SignOutButton';
+import UserMenu from '@/components/UserMenu';
 
 export default async function Header() {
   let user: { email?: string } | null = null;
@@ -23,18 +23,7 @@ export default async function Header() {
       </Link>
       <div className="flex items-center gap-4">
         {user ? (
-          <>
-            <span className="text-sm text-gray-600 hidden sm:inline">
-              Signed in as {user.email}
-            </span>
-            <SignOutButton />
-            <Link
-              href="/teacher"
-              className="py-2 px-4 rounded-lg text-sm font-medium text-[#1a1a1a] border border-gray-200 bg-white/80 hover:bg-white/90 hover:border-[#ffc2d1] transition-colors"
-            >
-              Teacher
-            </Link>
-          </>
+          <UserMenu email={user.email || ''} />
         ) : (
           <Link
             href="/teacher"

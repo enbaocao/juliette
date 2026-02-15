@@ -121,7 +121,7 @@ export default async function VideoPage({ params }: PageProps) {
           <div className="space-y-4">
             <Link
               href={`/videos/${id}/ask`}
-              className="block w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-center transition-colors"
+              className="block w-full py-4 px-6 bg-[#ffc8dd] hover:bg-[#ffbcd5] text-[#1a1a1a] font-medium rounded-lg text-center transition-colors"
             >
               Start Asking Questions
             </Link>

@@ -102,7 +102,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <button
             onClick={() => setActiveTab('questions')}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'questions' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-900'
+              activeTab === 'questions' ? 'border-[#ffc8dd] text-[#1a1a1a]' : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             💬 Q&A
@@ -111,7 +111,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <button
             onClick={() => setActiveTab('manim')}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'manim' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-600 hover:text-gray-900'
+              activeTab === 'manim' ? 'border-[#ffc8dd] text-[#1a1a1a]' : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             🎬 Animations
@@ -120,7 +120,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
           <button
             onClick={() => setActiveTab('personalized')}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'personalized' ? 'border-green-600 text-green-600' : 'border-transparent text-gray-600 hover:text-gray-900'
+              activeTab === 'personalized' ? 'border-[#ffc8dd] text-[#1a1a1a]' : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             ✨ Personalized
@@ -141,7 +141,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="What would you like to know about this lecture?"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none mb-3"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent resize-none mb-3"
                 rows={3}
               />
 
@@ -152,21 +152,21 @@ export default function StudentView({ context, session }: StudentViewProps) {
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => setMode('simple')}
-                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'simple' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'simple' ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                       }`}
                   >
                     Simple
                   </button>
                   <button
                     onClick={() => setMode('practice')}
-                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'practice' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'practice' ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                       }`}
                   >
                     Practice
                   </button>
                   <button
                     onClick={() => setMode('animation')}
-                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'animation' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    className={`px-3 py-2 text-xs rounded-lg border ${mode === 'animation' ? 'bg-[#ffc8dd] text-[#1a1a1a] border-[#ffc8dd]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                       }`}
                   >
                     Animation
@@ -184,7 +184,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
                     value={interestTags}
                     onChange={(e) => setInterestTags(e.target.value)}
                     placeholder="e.g., sports, music, cooking"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent"
                   />
                 </div>
               )}
@@ -198,7 +198,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
               <button
                 onClick={handleAskQuestion}
                 disabled={!question.trim() || isAsking}
-                className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isAsking ? "Asking..." : "Ask Question"}
               </button>

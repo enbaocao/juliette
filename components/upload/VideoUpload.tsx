@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/ToastProvider';
 
 type UploadMode = 'file' | 'youtube';
 
@@ -11,10 +12,10 @@ export default function VideoUpload() {
   const [title, setTitle] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     // Validate file type
@@ -85,7 +86,6 @@ export default function VideoUpload() {
     }
 
     setUploading(true);
-    setProgress(0);
     setError('');
 
     try {
@@ -106,6 +106,7 @@ export default function VideoUpload() {
         }
 
         const data = await response.json();
+        toast({ message: 'Video uploaded successfully!', type: 'success' });
         router.push(`/videos/${data.videoId}`);
       } else {
         // YouTube URL
@@ -123,6 +124,7 @@ export default function VideoUpload() {
         }
 
         const data = await response.json();
+        toast({ message: 'YouTube video added successfully!', type: 'success' });
         router.push(`/videos/${data.video_id}`);
       }
     } catch (err) {
@@ -144,7 +146,7 @@ export default function VideoUpload() {
               setError('');
             }}
             className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${mode === 'file'
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                ? 'border-[#ffc8dd] text-[#1a1a1a] dark:text-gray-200'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
               }`}
           >
@@ -167,7 +169,7 @@ export default function VideoUpload() {
               setError('');
             }}
             className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors ${mode === 'youtube'
-                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                ? 'border-[#ffc8dd] text-[#1a1a1a] dark:text-gray-200'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
               }`}
           >
@@ -187,7 +189,7 @@ export default function VideoUpload() {
             {/* Drag and Drop Area */}
             <div
               className={`relative border-2 border-dashed rounded-lg p-12 text-center transition-colors ${dragActive
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  ? 'border-[#ffc8dd] bg-[#ffe5ec] dark:bg-pink-900/20'
                   : 'border-gray-300 dark:border-gray-700'
                 }`}
               onDragEnter={handleDrag}
@@ -222,7 +224,7 @@ export default function VideoUpload() {
                   <div className="mt-4">
                     <label
                       htmlFor="file-upload"
-                      className="cursor-pointer text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                      className="cursor-pointer text-[#e8a0b4] hover:text-[#d4899e] font-medium"
                     >
                       Choose a video file
                     </label>
@@ -277,7 +279,7 @@ export default function VideoUpload() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., Introduction to Calculus - Derivatives"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800"
                 disabled={uploading}
                 required
               />
@@ -296,7 +298,7 @@ export default function VideoUpload() {
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
                 placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800"
                 disabled={uploading}
                 required
               />
@@ -314,18 +316,12 @@ export default function VideoUpload() {
           </div>
         )}
 
-        {/* Progress Bar */}
+        {/* Indeterminate Progress Bar */}
         {uploading && (
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Uploading...</span>
-              <span>{progress}%</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
+            <span className="text-sm text-gray-600">Uploading...</span>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+              <div className="h-2 rounded-full bg-[#ffc8dd] animate-indeterminate" />
             </div>
           </div>
         )}
@@ -338,7 +334,7 @@ export default function VideoUpload() {
               ? !file || !title || uploading
               : !youtubeUrl || uploading
           }
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+          className="w-full py-3 px-4 bg-[#ffc8dd] hover:bg-[#ffbcd5] disabled:bg-gray-400 disabled:cursor-not-allowed text-[#1a1a1a] font-medium rounded-lg transition-colors"
         >
           {uploading
             ? mode === 'file'

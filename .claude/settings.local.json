@@ -4,7 +4,9 @@
       "Bash(cd:*)",
       "Bash(npm install:*)",
       "Bash(git add:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ]
   }
 }

@@ -127,7 +127,7 @@ export default function PracticeSandbox() {
               <textarea
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
-                className="w-full h-64 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 font-mono text-xs"
+                className="w-full h-64 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800 font-mono text-xs"
                 placeholder="System prompt..."
               />
               <div className="mt-2 flex gap-2">
@@ -154,7 +154,7 @@ export default function PracticeSandbox() {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="Topic (e.g., linear regression, derivatives)"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800 text-sm"
                 disabled={loading}
                 required
               />
@@ -165,14 +165,14 @@ export default function PracticeSandbox() {
                 value={interests}
                 onChange={(e) => setInterests(e.target.value)}
                 placeholder="Interests (optional, e.g., basketball, music)"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800 text-sm"
                 disabled={loading}
               />
             </div>
             <button
               type="submit"
               disabled={!topic.trim() || loading}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors whitespace-nowrap text-sm"
+              className="px-6 py-2 bg-[#ffc8dd] hover:bg-[#ffbcd5] disabled:bg-gray-400 disabled:cursor-not-allowed text-[#1a1a1a] font-medium rounded-lg transition-colors whitespace-nowrap text-sm"
             >
               {loading ? 'Generating...' : 'Generate'}
             </button>
@@ -237,7 +237,7 @@ export default function PracticeSandbox() {
                     value={solution}
                     onChange={(e) => setSolution(e.target.value)}
                     placeholder="Type your solution here... Show your work step by step."
-                    className="w-full flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 resize-none font-mono text-sm"
+                    className="w-full flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#ffc8dd] focus:border-transparent dark:bg-gray-800 resize-none font-mono text-sm"
                   />
                   <div className="mt-3 flex justify-between items-center">
                     <span className="text-xs text-gray-500">

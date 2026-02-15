@@ -59,14 +59,14 @@ export default async function QuestionsPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Filter Tabs */}
         <div className="flex gap-2 mb-6">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg">All</button>
-          <button className="px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg hover:border-blue-500">
+          <button className="px-4 py-2 bg-[#ffc8dd] text-[#1a1a1a] rounded-lg">All</button>
+          <button className="px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg hover:border-[#ffc8dd]">
             💡 Simple
           </button>
-          <button className="px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg hover:border-blue-500">
+          <button className="px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg hover:border-[#ffc8dd]">
             📝 Practice
           </button>
-          <button className="px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg hover:border-blue-500">
+          <button className="px-4 py-2 bg-white dark:bg-gray-800 border rounded-lg hover:border-[#ffc8dd]">
             🎬 Animation
           </button>
         </div>
@@ -85,7 +85,7 @@ export default async function QuestionsPage() {
             {questions.map((q: any) => (
               <div
                 key={q.id}
-                className="bg-white dark:bg-gray-800 rounded-lg border p-6 hover:border-blue-500 transition-colors"
+                className="bg-white dark:bg-gray-800 rounded-lg border p-6 hover:border-[#ffc8dd] transition-colors"
               >
                 <div className="flex items-start gap-4">
                   {/* Mode Icon */}

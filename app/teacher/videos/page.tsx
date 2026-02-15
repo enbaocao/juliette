@@ -41,7 +41,7 @@ export default async function VideosPage() {
             </div>
             <Link
               href="/upload"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="px-4 py-2 bg-[#ffc8dd] hover:bg-[#ffbcd5] text-[#1a1a1a] rounded-lg transition-colors"
             >
               + Upload Video
             </Link>
@@ -59,7 +59,7 @@ export default async function VideosPage() {
             </p>
             <Link
               href="/upload"
-              className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="inline-block px-6 py-3 bg-[#ffc8dd] hover:bg-[#ffbcd5] text-[#1a1a1a] rounded-lg transition-colors"
             >
               Upload Your First Video
             </Link>
@@ -70,7 +70,7 @@ export default async function VideosPage() {
               <Link
                 key={video.id}
                 href={`/videos/${video.id}`}
-                className="bg-white dark:bg-gray-800 rounded-lg border hover:border-blue-500 transition-all overflow-hidden"
+                className="bg-white dark:bg-gray-800 rounded-lg border hover:border-[#ffc8dd] transition-all overflow-hidden"
               >
                 {/* Video Thumbnail Placeholder */}
                 <div className="aspect-video bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">

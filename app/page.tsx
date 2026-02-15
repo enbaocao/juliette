@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import AuthForm from '@/components/auth/AuthForm';
 import { createClient } from '@/lib/supabase/server';
+import { Upload, LayoutDashboard, PlayCircle } from 'lucide-react';
 
 export const metadata = {
   title: "Welcome",
@@ -32,14 +33,42 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ n
           </h1>
 
           {user ? (
-            <div className="flex flex-col items-center gap-4">
-              <p className="text-gray-600">You&apos;re signed in as {user.email}</p>
-              <Link
-                href="/upload"
-                className="py-3 px-8 bg-[#ffc8dd] text-[#1a1a1a] font-medium rounded-lg hover:bg-[#ffbcd5] transition-colors shadow-md"
-              >
-                Go to Upload
-              </Link>
+            <div className="flex flex-col items-center gap-6 w-full">
+              <p className="text-gray-500 text-sm">What would you like to do today?</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+                <Link
+                  href="/upload"
+                  className="p-6 bg-white rounded-2xl border border-gray-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:border-[#ffc8dd] hover:shadow-[0_4px_20px_rgb(255,200,221,0.2)] transition-all text-center"
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#ffe5ec] flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-[#e8a0b4]" />
+                  </div>
+                  <h3 className="font-semibold text-[#1a1a1a] mb-1">Upload Video</h3>
+                  <p className="text-xs text-gray-500">Add a new video for AI analysis</p>
+                </Link>
+
+                <Link
+                  href="/teacher"
+                  className="p-6 bg-white rounded-2xl border border-gray-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:border-[#ffc8dd] hover:shadow-[0_4px_20px_rgb(255,200,221,0.2)] transition-all text-center"
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#ffe5ec] flex items-center justify-center">
+                    <LayoutDashboard className="w-6 h-6 text-[#e8a0b4]" />
+                  </div>
+                  <h3 className="font-semibold text-[#1a1a1a] mb-1">Dashboard</h3>
+                  <p className="text-xs text-gray-500">Manage videos & analytics</p>
+                </Link>
+
+                <Link
+                  href="/teacher/videos"
+                  className="p-6 bg-white rounded-2xl border border-gray-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:border-[#ffc8dd] hover:shadow-[0_4px_20px_rgb(255,200,221,0.2)] transition-all text-center"
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#ffe5ec] flex items-center justify-center">
+                    <PlayCircle className="w-6 h-6 text-[#e8a0b4]" />
+                  </div>
+                  <h3 className="font-semibold text-[#1a1a1a] mb-1">Browse Videos</h3>
+                  <p className="text-xs text-gray-500">Watch and ask questions</p>
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="bg-[#FAFAFC] p-7 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">

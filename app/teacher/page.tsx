@@ -87,7 +87,7 @@ export default async function TeacherDashboard() {
             </div>
             <Link
               href="/upload"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="px-4 py-2 bg-[#ffc8dd] hover:bg-[#ffbcd5] text-[#1a1a1a] rounded-lg transition-colors"
             >
               + Upload Video
             </Link>
@@ -242,7 +242,7 @@ export default async function TeacherDashboard() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
             href="/teacher/analytics"
-            className="p-6 bg-white dark:bg-gray-800 rounded-lg border hover:border-blue-500 transition-colors"
+            className="p-6 bg-white dark:bg-gray-800 rounded-lg border hover:border-[#ffc8dd] transition-colors"
           >
             <div className="text-3xl mb-3">📊</div>
             <h3 className="font-semibold mb-1">View Analytics</h3>
@@ -253,7 +253,7 @@ export default async function TeacherDashboard() {
 
           <Link
             href="/teacher/zoom"
-            className="p-6 bg-white dark:bg-gray-800 rounded-lg border hover:border-blue-500 transition-colors"
+            className="p-6 bg-white dark:bg-gray-800 rounded-lg border hover:border-[#ffc8dd] transition-colors"
           >
             <div className="text-3xl mb-3">🎥</div>
             <h3 className="font-semibold mb-1">Zoom Integration</h3>
@@ -264,7 +264,7 @@ export default async function TeacherDashboard() {
 
           <Link
             href="/teacher/settings"
-            className="p-6 bg-white dark:bg-gray-800 rounded-lg border hover:border-blue-500 transition-colors"
+            className="p-6 bg-white dark:bg-gray-800 rounded-lg border hover:border-[#ffc8dd] transition-colors"
           >
             <div className="text-3xl mb-3">⚙️</div>
             <h3 className="font-semibold mb-1">Settings</h3>
