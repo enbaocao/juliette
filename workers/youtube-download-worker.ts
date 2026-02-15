@@ -4,12 +4,24 @@ import * as path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 // Now import everything else
-import { supabaseAdmin } from '@/lib/supabase-server';
-import { Job } from '@/lib/types';
+import { createClient } from '@supabase/supabase-js';
+import { Job } from '../lib/types';
 import * as fs from 'fs';
 import * as os from 'os';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+
+// Create Supabase client after env vars are loaded
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 const execFileAsync = promisify(execFile);
 const POLLING_INTERVAL = 5000; // 5 seconds
@@ -66,11 +78,12 @@ async function downloadYouTubeVideo(
     }
 
     // Download the video
-    // Format: best video+audio in mp4, fallback to best single file
+    // Format: 480p or lower to keep file size manageable for Supabase Storage
+    // This ensures videos stay under typical storage limits (~50MB)
     const { stderr } = await execFileAsync(
       'yt-dlp',
       [
-        '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        '-f', 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]/best[height<=360]',
         '--merge-output-format', 'mp4',
         '-o', outputPath,
         '--no-warnings',
