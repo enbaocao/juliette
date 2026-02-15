@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? process.env.DEMO_USER_ID ?? 'demo-user-' + Date.now();
+    const userId = user?.id ?? process.env.DEMO_USER_ID ?? process.env.PUBLIC_USER_ID ?? 'demo-user-' + Date.now();
 
     const formData = await request.formData();
     const file = formData.get('file') as File;

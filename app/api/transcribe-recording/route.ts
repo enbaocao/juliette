@@ -68,23 +68,26 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Prefer authenticated user id, otherwise fall back to DEMO_USER_ID env var.
-    // If neither is present, return an instructive error rather than inserting a null.
+    // This endpoint is intentionally usable without auth (e.g., Zoom Apps context).
+    // We still need a user_id for the `videos` row, so we:
+    // 1) use the authenticated user id when present
+    // 2) otherwise fall back to DEMO_USER_ID
+    // 3) otherwise use a fixed "public" UUID (you'll create this user in Supabase once)
     const envDemoId = process.env.DEMO_USER_ID;
-    const candidateId = user?.id ?? envDemoId ?? null;
+    const publicUserId = process.env.PUBLIC_USER_ID;
+    const candidateId = user?.id ?? envDemoId ?? publicUserId ?? null;
 
     if (!candidateId) {
-      console.error("No authenticated user and no DEMO_USER_ID set");
       return NextResponse.json(
         {
           error:
-            "Authentication required or set DEMO_USER_ID to a valid user UUID in your environment",
+            "Missing user context. Set PUBLIC_USER_ID (recommended) or DEMO_USER_ID in the environment.",
         },
-        { status: 401 },
+        { status: 500 },
       );
     }
 
-    // If DEMO_USER_ID exists, validate it's a UUID to avoid DB errors
+    // If DEMO_USER_ID / PUBLIC_USER_ID exist, validate they're UUIDs to avoid DB errors
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (envDemoId && !uuidRegex.test(envDemoId)) {
@@ -93,6 +96,17 @@ export async function POST(request: NextRequest) {
         {
           error:
             "DEMO_USER_ID env is present but not a valid UUID. Set it to a valid UUID.",
+        },
+        { status: 500 },
+      );
+    }
+
+    if (publicUserId && !uuidRegex.test(publicUserId)) {
+      console.error("PUBLIC_USER_ID is not a valid UUID:", publicUserId);
+      return NextResponse.json(
+        {
+          error:
+            "PUBLIC_USER_ID env is present but not a valid UUID. Set it to a valid UUID.",
         },
         { status: 500 },
       );
