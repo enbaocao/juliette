@@ -11,6 +11,12 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        "juliette-pink": {
+          DEFAULT: "#ffc2d1",
+          light: "#ffe5ec",
+          medium: "#ffc8dd",
+          dark: "#f5b8c8",
+        },
       },
     },
   },
