@@ -15,30 +15,43 @@ COPY lib/ ./lib/
 COPY utils/ ./utils/
 COPY docker/manim-api-server.ts ./docker/
 
-# Create a custom tsconfig for Docker build
+# Create a custom tsconfig for Docker build (standalone, not extending)
 RUN echo '{ \
-  "extends": "./tsconfig.json", \
   "compilerOptions": { \
     "outDir": "dist", \
     "module": "commonjs", \
     "target": "ES2020", \
+    "lib": ["ES2020"], \
     "esModuleInterop": true, \
     "moduleResolution": "node", \
     "skipLibCheck": true, \
     "resolveJsonModule": true, \
+    "strict": false, \
+    "allowSyntheticDefaultImports": true, \
+    "forceConsistentCasingInFileNames": true, \
     "baseUrl": ".", \
-    "paths": { "@/*": ["./*"] } \
+    "paths": { \
+      "@/*": ["./*"] \
+    } \
   }, \
   "include": [ \
     "docker/manim-api-server.ts", \
     "lib/**/*.ts", \
     "utils/manim-generator.ts", \
     "utils/manim-executor.ts" \
-  ] \
+  ], \
+  "exclude": ["node_modules"] \
 }' > tsconfig.docker.json
 
+# Debug: Show the tsconfig and files
+RUN echo "=== TypeScript Config ===" && cat tsconfig.docker.json
+RUN echo "=== Files to compile ===" && ls -la docker/ lib/ utils/
+
 # Build TypeScript to JavaScript using the custom config
-RUN npx tsc --project tsconfig.docker.json
+RUN npx tsc --project tsconfig.docker.json --listFiles
+
+# Debug: Verify compilation output
+RUN echo "=== Compilation Output ===" && ls -la dist/ && find dist/ -type f
 
 # Stage 2: Production image with Manim + Node.js
 FROM manimcommunity/manim:stable
