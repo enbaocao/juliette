@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { createClient } from "@/lib/supabase/server";
 import { openai } from "@/lib/openai";
 import {
   retrieveRelevantChunks,
@@ -45,8 +46,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For MVP, use hardcoded user ID
-    const userId = process.env.DEMO_USER_ID || "demo-user-" + Date.now();
+    // Get user from auth session, fallback to demo for unauthenticated
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id ?? process.env.DEMO_USER_ID ?? "demo-user-" + Date.now();
 
     // Retrieve relevant transcript chunks
     // For live sessions, prioritize real-time chunks
