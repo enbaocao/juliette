@@ -120,31 +120,28 @@ export default function StudentView({ context, session }: StudentViewProps) {
         <div className="flex">
           <button
             onClick={() => setActiveTab('questions')}
-            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'questions'
+            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'questions'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             💬 Q&A
           </button>
           <button
             onClick={() => setActiveTab('manim')}
-            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'manim'
+            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'manim'
                 ? 'border-purple-600 text-purple-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             🎬 Animations
           </button>
           <button
             onClick={() => setActiveTab('personalized')}
-            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'personalized'
+            className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'personalized'
                 ? 'border-green-600 text-green-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             ✨ Personalized
           </button>
@@ -155,83 +152,83 @@ export default function StudentView({ context, session }: StudentViewProps) {
       {activeTab === 'questions' && (
         <>
           {/* Question Input */}
-      <div className="border-b border-gray-200 p-4 bg-white">
-        <h3 className="font-semibold text-gray-900 mb-3">Ask a Question</h3>
+          <div className="border-b border-gray-200 p-4 bg-white">
+            <h3 className="font-semibold text-gray-900 mb-3">Ask a Question</h3>
 
-        <textarea
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="What would you like to know about this lecture?"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none mb-3"
-          rows={3}
-        />
-
-        {/* Mode Selection */}
-        <div className="mb-3">
-          <label className="block text-xs font-medium text-gray-700 mb-2">
-            Response Type
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => setMode('simple')}
-              className={`px-3 py-2 text-xs rounded-lg border ${mode === 'simple'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-            >
-              Simple
-            </button>
-            <button
-              onClick={() => setMode('practice')}
-              className={`px-3 py-2 text-xs rounded-lg border ${mode === 'practice'
-                  ? 'bg-purple-600 text-white border-purple-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-            >
-              Practice
-            </button>
-            <button
-              onClick={() => setMode('animation')}
-              className={`px-3 py-2 text-xs rounded-lg border ${mode === 'animation'
-                  ? 'bg-green-600 text-white border-green-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-            >
-              Animation
-            </button>
-          </div>
-        </div>
-
-        {/* Interest Tags (for practice mode) */}
-        {mode === 'practice' && (
-          <div className="mb-3">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Interests (comma-separated)
-            </label>
-            <input
-              type="text"
-              value={interestTags}
-              onChange={(e) => setInterestTags(e.target.value)}
-              placeholder="e.g., sports, music, cooking"
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <textarea
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="What would you like to know about this lecture?"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none mb-3"
+              rows={3}
             />
-          </div>
-        )}
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
-            <p className="text-xs text-red-700">{error}</p>
-          </div>
-        )}
+            {/* Mode Selection */}
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                Response Type
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => setMode('simple')}
+                  className={`px-3 py-2 text-xs rounded-lg border ${mode === 'simple'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                  Simple
+                </button>
+                <button
+                  onClick={() => setMode('practice')}
+                  className={`px-3 py-2 text-xs rounded-lg border ${mode === 'practice'
+                    ? 'bg-purple-600 text-white border-purple-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                  Practice
+                </button>
+                <button
+                  onClick={() => setMode('animation')}
+                  className={`px-3 py-2 text-xs rounded-lg border ${mode === 'animation'
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                  Animation
+                </button>
+              </div>
+            </div>
 
-        <button
-          onClick={handleAskQuestion}
-          disabled={!question.trim() || isAsking}
-          className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isAsking ? 'Asking...' : 'Ask Question'}
-        </button>
-      </div>
+            {/* Interest Tags (for practice mode) */}
+            {mode === 'practice' && (
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Interests (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={interestTags}
+                  onChange={(e) => setInterestTags(e.target.value)}
+                  placeholder="e.g., sports, music, cooking"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
+                <p className="text-xs text-red-700">{error}</p>
+              </div>
+            )}
+
+            <button
+              onClick={handleAskQuestion}
+              disabled={!question.trim() || isAsking}
+              className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAsking ? 'Asking...' : 'Ask Question'}
+            </button>
+          </div>
 
           {/* Recent Questions Feed */}
           <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
@@ -253,13 +250,12 @@ export default function StudentView({ context, session }: StudentViewProps) {
                         Q: {q.question}
                       </p>
                       <span
-                        className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-                          q.mode === 'simple'
+                        className={`ml-2 px-2 py-0.5 text-xs rounded-full ${q.mode === 'simple'
                             ? 'bg-blue-100 text-blue-800'
                             : q.mode === 'practice'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}
                       >
                         {q.mode}
                       </span>
@@ -320,7 +316,7 @@ export default function StudentView({ context, session }: StudentViewProps) {
             </h3>
             <p className="text-sm text-gray-600 mb-4 max-w-md mx-auto">
               Get questions and practice problems tailored to your learning style and interests.
-              Based on today's discussion: "{session?.title || 'Current lecture'}"
+              Based on today&apos;s discussion: &quot;{session?.title || 'Current lecture'}&quot;
             </p>
             <div className="bg-white border border-gray-200 rounded-lg p-4 max-w-md mx-auto text-left">
               <p className="text-xs text-gray-500 mb-2">Coming Soon:</p>

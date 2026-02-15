@@ -285,7 +285,7 @@ export default function ManimVideoTab({ context, session }: ManimVideoTabProps) 
               No Animations Yet
             </h3>
             <p className="text-sm text-gray-600 max-w-xs mx-auto">
-              Generate your first animation to visualize concepts from today's lecture!
+              Generate your first animation to visualize concepts from today&apos;s lecture!
             </p>
           </div>
         )}
