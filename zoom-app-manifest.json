@@ -8,8 +8,8 @@
   "developer_email": "support@yourwebsite.com",
   "home_url": "https://yourwebsite.com",
   "redirect_url_allowlist": [
-    "http://localhost:3001/zoom/auth",
-    "https://yourproductiondomain.com/zoom/auth"
+    "http://localhost:3000/zoom/auth",
+    "https://juliette-six.vercel.app/zoom/auth"
   ],
   "zoom_app_config": {
     "in_meeting_panel": {

@@ -3,10 +3,12 @@
  */
 
 export const zoomConfig = {
-  clientId: process.env.ZOOM_CLIENT_ID || '',
-  clientSecret: process.env.ZOOM_CLIENT_SECRET || '',
-  webhookSecretToken: process.env.ZOOM_WEBHOOK_SECRET_TOKEN || '',
-  redirectUrl: process.env.NEXT_PUBLIC_ZOOM_REDIRECT_URL || 'http://localhost:3001/zoom/auth',
+  clientId: process.env.ZOOM_CLIENT_ID || "",
+  clientSecret: process.env.ZOOM_CLIENT_SECRET || "",
+  webhookSecretToken: process.env.ZOOM_WEBHOOK_SECRET_TOKEN || "",
+  redirectUrl:
+    process.env.NEXT_PUBLIC_ZOOM_REDIRECT_URL ||
+    "http://localhost:3000/zoom/auth",
 };
 
 export interface ZoomContext {
@@ -14,7 +16,7 @@ export interface ZoomContext {
   meetingNumber: string;
   userName: string;
   userEmail?: string;
-  role: 'host' | 'attendee';
+  role: "host" | "attendee";
 }
 
 export interface LiveSession {
@@ -25,5 +27,5 @@ export interface LiveSession {
   host_user_id: string;
   started_at: string;
   ended_at?: string;
-  status: 'active' | 'ended';
+  status: "active" | "ended";
 }
